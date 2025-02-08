@@ -23,6 +23,7 @@ COPY orbitdb-peer/ ./orbitdb-peer/
 
 # Expose the port
 EXPOSE 3000
+EXPOSE 4001
 
 # Command to run the app (uses PORT from environment)
 # Set up with two replicas for now
