@@ -24,6 +24,29 @@ async function setupDB() {
 
 setupDB().catch(console.error)
 
+//CRUD
+
+// Create
+
+export const add = async (value) => {
+  return db.put({ value })
+}
+
+// Read
+export const read = async (hash) => {
+  return db.get(hash)
+}
+
+// Update
+export const update = async (hash, value) => {
+  return db.put(hash, { value })
+}
+
+// Delete
+export const remove = async (hash) => {
+  return db.del(hash)
+}
+
 app.get('/records', async (req, res) => {
   try {
     const records = await db.all()
