@@ -23,7 +23,7 @@ setupDB().catch(console.error)
 // Create
 
 export const add = async (value) => {
-  return db.put({ value })
+  return db.add({ value })
 }
 
 // Read
