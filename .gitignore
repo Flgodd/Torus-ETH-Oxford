@@ -2,3 +2,4 @@ node_modules
 ipfs/
 orbitdb/
 dbdata/
+.DS_Store
