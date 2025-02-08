@@ -3,3 +3,4 @@ ipfs/
 orbitdb/
 dbdata/
 .DS_Store
+.idea
