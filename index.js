@@ -20,7 +20,6 @@ app.get('/', async (req, res) => {
     const { username } = req.body;
 
     res.send('Hello, TypeScript!');
-    const users = await readFile('users.txt', 'utf8');
 
     if (checkAuth(username)) {
         res.send('Authenticated!');
@@ -93,7 +92,7 @@ app.post('/read', async (req, res) => {
       res.status(500).json({ error: error })
     }
   })
-  
+
   app.post('/upsert', async (req, res) => {
     const { key } = req.params;
     const { username, value } = req.body;
@@ -112,11 +111,24 @@ app.post('/read', async (req, res) => {
         }
 
         res.json({ insertedKey })
-    } catch (error) {
-      res.status(500).json({ error: error })
-    }
-  })
+      } catch (error) {
+        res.status(500).json({ error: error })
+      }
+    })
 
-app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
-});
+    app.post('/remove', async (req, res) => {
+      const { key } = req.params;
+      const { username } = req.body;
+    
+        if(!checkAuth(username)) {
+          res.status(401).json({ error: 'Not authenticated - call /authenticate' })
+        }
+    
+        try {
+          const insertedKey = await remove(key)
+  
+          res.json({ insertedKey })
+        } catch (error) {
+          res.status(500).json({ error: error })
+        }
+      })
