@@ -32,7 +32,7 @@ function getNextNode() {
     return node;
 }
 
-// Subscribe endpoint
+// Subscribe endpoint 
 app.post("/subscribe", (req, res) => {
     try {
         const { serverAddress } = req.body;
@@ -77,7 +77,6 @@ async function processQueue(){
     }
 
     try{
-        //const response = await axios.post(`http://${node}/handleRequest`, req.body);
         var response = null;
         
         if (operation === "READ" && data._id) {
