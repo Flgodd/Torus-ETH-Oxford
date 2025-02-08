@@ -1,6 +1,7 @@
 {
   "name": "torus-eth-oxford",
   "version": "1.0.0",
+  "type": "module",
   "description": "agents for torus network",
   "main": "index.js",
   "scripts": {
