@@ -24,6 +24,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "ethers": "^6.13.5",
+    "event-target-shim": "^6.0.2",
     "express": "^4.21.2",
     "helia": "^5.2.0",
     "jsonwebtoken": "^9.0.2"
