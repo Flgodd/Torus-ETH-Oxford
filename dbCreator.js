@@ -2,7 +2,7 @@
 import { fork } from "child_process";
 import { spawn } from "child_process";
 
-let n = 1;
+let n = parseInt(process.argv[2]) || 1;
 let children = [];
 let nodePath = process.execPath;
 

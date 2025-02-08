@@ -6,6 +6,7 @@ import { Libp2pOptions } from './config/libp2p.js'
 import { randomUUID } from 'crypto'
 import { multiaddr } from '@multiformats/multiaddr'
 import { IPFSAccessController } from '@orbitdb/core'
+import express from 'express';
 
 export let db;
 let ipfs;
