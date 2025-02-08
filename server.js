@@ -41,28 +41,34 @@ export const remove = async (hash) => {
   return db.del(hash)
 }
 
-app.get('/records', async (req, res) => {
-  try {
-    const records = await db.all()
-    res.json({ records })
-  } catch (error) {
-    res.status(500).json({ error: error.message })
-  }
-})
+// getAllRecords
+export async function getAllRecords() {
+  if (!db) throw new Error('Database not initialized')
+  return await db.all()
+}
 
-app.post('/records', async (req, res) => {
-  try {
-    const { value } = req.body
-    if (!value) {
-      return res.status(400).json({ error: 'Value is required' })
-    }
+// app.get('/records', async (req, res) => {
+//   try {
+//     const records = await db.all()
+//     res.json({ records })
+//   } catch (error) {
+//     res.status(500).json({ error: error.message })
+//   }
+// })
 
-    await db.add(value)
-    res.json({ success: true, message: 'Record added' })
-  } catch (error) {
-    res.status(500).json({ error: error.message })
-  }
-})
+// app.post('/records', async (req, res) => {
+//   try {
+//     const { value } = req.body
+//     if (!value) {
+//       return res.status(400).json({ error: 'Value is required' })
+//     }
+
+//     await db.add(value)
+//     res.json({ success: true, message: 'Record added' })
+//   } catch (error) {
+//     res.status(500).json({ error: error.message })
+//   }
+// })
 
 const PORT = 3000
 app.listen(PORT, () => {

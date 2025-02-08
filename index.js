@@ -2,6 +2,7 @@ import express from 'express';
 import { ethers } from 'ethers';
 import { readFile } from "fs/promises";
 import {db} from './server.js';
+import { add, read, update, remove, getAllRecords } from './server.js'
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -74,7 +75,7 @@ app.post("/verify-signature", (req, res) => {
 
 app.get('/records', async (req, res) => {
     try {
-      const records = await db.all()
+      const records = await db.getAllRecords()
       res.json({ records })
     } catch (error) {
       res.status(500).json({ error: error })
@@ -88,7 +89,7 @@ app.get('/records', async (req, res) => {
         res.status(400).json({ error: 'Value is required' })
       }
   
-      await db.add(value)
+      await add(value)
       res.json({ success: true, message: 'Record added' })
     } catch (error) {
       res.status(500).json({ error: error })
