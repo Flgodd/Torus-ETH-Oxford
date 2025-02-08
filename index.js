@@ -116,19 +116,19 @@ app.post('/read', async (req, res) => {
       }
     })
 
-    app.post('/remove', async (req, res) => {
-      const { key } = req.params;
-      const { username } = req.body;
-    
-        if(!checkAuth(username)) {
-          res.status(401).json({ error: 'Not authenticated - call /authenticate' })
-        }
-    
-        try {
-          const insertedKey = await remove(key)
+  app.post('/remove', async (req, res) => {
+    const { key } = req.params;
+    const { username } = req.body;
   
-          res.json({ insertedKey })
-        } catch (error) {
-          res.status(500).json({ error: error })
-        }
-      })
+      if(!checkAuth(username)) {
+        res.status(401).json({ error: 'Not authenticated - call /authenticate' })
+      }
+  
+      try {
+        const insertedKey = await remove(key)
+
+        res.json({ insertedKey })
+      } catch (error) {
+        res.status(500).json({ error: error })
+      }
+    })
