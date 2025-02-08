@@ -1,29 +1,54 @@
 // @ts-check
-import { fork } from "child_process";
 import { spawn } from "child_process";
 
 let n = parseInt(process.argv[2]) || 1;
 let children = [];
 let nodePath = process.execPath;
+const PORT = 3001;
+const NUM_REPLICAS = 2;
 
 //initial db - no args
-const initChild = fork('server.js', [], {
-    stdio: 'inherit',  // Keeps I/O connected
-    detached: false
-});
-
+const initChild = spawn('docker', [
+    'run', '--rm',
+    '-p', `${PORT}:3000`,//map to port 3000 which we hardcode below as the port to listen on inside of the container
+    '-e', `PORT=3000`,
+    '-e', `NUM_REPLICAS=${NUM_REPLICAS}`,
+    '--name', 'dbservice', 'dbservice'
+]
+);
 children.push(initChild);
 
 //wait for child to send first 'dbaddr,multiaddr'
-initChild.on('message', (addresses) => {
+initChild.stdout.on('data', (data) => {
+    let parsed
+    try {
+        parsed = JSON.parse(data.toString().trim());
+        console.log("Received Object:", parsed);
+    } catch (error) {
+        console.error("Not JSON: ", data.toString());
+        return;
+    }
+
     // @ts-ignore
-    const { dbaddr, multiaddress } = addresses;
+    const { dbaddr, multiaddress } = parsed;
+
     let i;
-    for(i = 0; i < n; i++){
-        children.push(spawn(nodePath, ['server.js', dbaddr, multiaddress], {
-            stdio: 'inherit',  // Keeps I/O connected
-            detached: false    // Ties lifecycle to the parent
-          }));
+    for(i = 1; i < NUM_REPLICAS + 1; i++){
+        console.log("spawning child on port: ", PORT+i, " access thru localhost\n")
+
+        children.push(
+            spawn('docker', [
+                'run', '--rm',
+                '-p', `${PORT+i}:3000`,//map to port 3000 which we hardcode below
+                '-e', `PORT=3000`,
+                '-e', `REPLICA=yes`,
+                '-e', `DBADDR=${dbaddr}`,
+                '-e', `MULTIADDR=${multiaddress}`,
+                '--name', `CHILDDB${i}`, 'dbservice'
+            ],{
+                stdio: 'inherit' // This makes stdout and stderr go straight to the terminal
+            })
+        );
     }
 });
 

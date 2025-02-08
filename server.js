@@ -7,14 +7,42 @@ import { randomUUID } from 'crypto'
 import { multiaddr } from '@multiformats/multiaddr'
 import { IPFSAccessController } from '@orbitdb/core'
 import express from 'express';
+if (typeof globalThis.CustomEvent === "undefined") {
+  globalThis.CustomEvent = class CustomEvent extends Event {
+      constructor(event, params = {}) {
+          super(event, params);
+          this.detail = params.detail || null;
+      }
+  };
+}
+
+global.CustomEvent = CustomEvent; // Make it available globally
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+const REPLICA = process.env.REPLICA || false;
+const DBADDR = process.env.DBADDR || null;
+const MULTIADDR = process.env.MULTIADDR || null;
+const NUM_REPLICAS = process.env.NUM_REPLICAS || 2;
+
+app.use(express.json());
+
+app.get('/', (req, res) => {
+  res.send(`Hello from DB service running on port ${PORT}`);
+});
+
+//dockers bridge network - accept requests from external connections
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server is running at http://0.0.0.0:${PORT}/`);
+});
 
 export let db;
 let ipfs;
 let orbitdb;
+let randDir = (Math.random() + 1).toString(36).substring(2)
+
 //for setting up initial root db
 async function setupDB() {
-  let randDir = (Math.random() + 1).toString(36).substring(2)
-    
   const blockstore = new LevelBlockstore(`./dbdata/${randDir}/ipfs/blocks`)
   const libp2p = await createLibp2p(Libp2pOptions)
   ipfs = await createHelia({ libp2p, blockstore })
@@ -25,20 +53,19 @@ async function setupDB() {
   
   console.log('Database ready at:', db.address, orbitdb.ipfs.libp2p.getMultiaddrs()[0].toString())
   
-  process.send({ dbaddr: db.address, multiaddress: orbitdb.ipfs.libp2p.getMultiaddrs()[0].toString() })
-
   db.events.on('update', async (entry) => {
     // what has been updated.
-    console.log('update', entry.payload.value)
+    console.log('update from root: ', entry.payload.value)
   })
 
   await upsert("FUCK YEAH ROOT")
+
+  //DO NOT REMOVE - sends data back to parent for parsing for replica nodes
+  console.log(`{"dbaddr": "${db.address}", "multiaddress": "${orbitdb.ipfs.libp2p.getMultiaddrs()[0].toString()}"}`)
 }
 
 //replica children
 async function setupReplica() {
-  let multiaddress = process.argv[3], dbaddr = process.argv[2]
-  let randDir = (Math.random() + 1).toString(36).substring(2)
     
   const blockstore = new LevelBlockstore(`./dbdata/${randDir}/ipfs/blocks`)
   const libp2p = await createLibp2p(Libp2pOptions)
@@ -46,17 +73,22 @@ async function setupReplica() {
 
   orbitdb = await createOrbitDB({ ipfs, directory: `./dbdata/${randDir}/orbitdb` })
   
-  await orbitdb.ipfs.libp2p.dial(multiaddr(multiaddress))
-  console.log('opening db with ', dbaddr, ' dialling ', multiaddress)
-  db = await orbitdb.open(dbaddr)
+  // dial into known stable node (root)
+  await orbitdb.ipfs.libp2p.dial(multiaddr(MULTIADDR))
+  console.log('opening db with ', DBADDR, ' dialling ', MULTIADDR)
+  db = await orbitdb.open(DBADDR)
 
   await upsert("FUCK YEAH REPLICA")
+
+
 }
 
-if(process.argv[2] && process.argv[3]) {
+if(REPLICA) {
+  console.log('ssetting up replic')
   setupReplica().catch(console.error)
 }
 else {
+  console.log('setting up root db')
   setupDB().catch(console.error)
 }
 
@@ -97,9 +129,10 @@ export async function getAllRecords() {
   // Clean up when stopping this app using ctrl+c
 process.on('SIGINT', async () => {
   // Close your db and stop OrbitDB and IPFS.
+  console.log("Closing db")
   await db.close()
   await orbitdb.stop()
   await ipfs.stop()
 
-  process.exit()
+  process.exit(0)
 })

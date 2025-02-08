@@ -132,3 +132,6 @@ app.post('/read', async (req, res) => {
         res.status(500).json({ error: error })
       }
     })
+
+app.listen(PORT, () => {
+  console.log(`API running on http://localhost:${PORT}`)});
