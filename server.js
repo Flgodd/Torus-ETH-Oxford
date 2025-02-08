@@ -44,13 +44,15 @@ let randDir = (Math.random() + 1).toString(36).substring(2)
 //for setting up initial root db
 async function setupDB() {
   const blockstore = new LevelBlockstore(`./dbdata/${randDir}/ipfs/blocks`)
+  console.log("poo")
   const libp2p = await createLibp2p(Libp2pOptions)
+  console.log("poo1 ")
   ipfs = await createHelia({ libp2p, blockstore })
 
   orbitdb = await createOrbitDB({ ipfs, directory: `./dbdata/${randDir}/orbitdb` })
   
   db = await orbitdb.open('my-db', { AccessController: IPFSAccessController({ write: ['*']}), type: 'documents' })
-  
+  console.log("poo2")
   console.log('Database ready at:', db.address, orbitdb.ipfs.libp2p.getMultiaddrs()[0].toString())
   
   db.events.on('update', async (entry) => {
@@ -60,8 +62,9 @@ async function setupDB() {
 
   await upsert("FUCK YEAH ROOT")
 
+  let multiaddress = orbitdb.ipfs.libp2p.getMultiaddrs()[0].toString();
   //DO NOT REMOVE - sends data back to parent for parsing for replica nodes
-  console.log(`{"dbaddr": "${db.address}", "multiaddress": "${orbitdb.ipfs.libp2p.getMultiaddrs()[0].toString()}"}`)
+  console.log(`{"dbaddr": "${db.address}", "multiaddress": "${multiaddress}"}`)
 }
 
 //replica children
