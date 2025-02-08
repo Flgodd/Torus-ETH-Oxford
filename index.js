@@ -1,134 +1,112 @@
-import express from 'express';
-import { ethers } from 'ethers';
-import { readFile } from "fs/promises";
-import {db} from './server.js';
-import { add, read, update, remove, getAllRecords } from './server.js'
+import express from "express";
+import { ethers } from "ethers";
+import jwt from "jsonwebtoken";
+import dotenv from "dotenv";
+import cors from "cors";
+
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const SECRET_KEY = process.env.JWT_SECRET || "your_secret_key";
+const TOKEN_EXPIRATION = process.env.TOKEN_EXPIRATION || "1h";
 
 app.use(express.json());
+app.use(cors());
 
-function checkAuth(username){
-    const users = readFile('users.txt', 'utf8');
-    return users.includes(username);
+// Generate JWT Token
+function generateToken(walletAddress) {
+  return jwt.sign({ walletAddress }, SECRET_KEY, { expiresIn: TOKEN_EXPIRATION });
 }
 
-const challenges = {};
+//  Welcome Route
+app.get("/", (req, res) => {
+  res.send("Welcome to the Agent Authentication API! Use /authenticate to start.");
+});
 
-app.get('/', async (req, res) => {
-    const { username } = req.body;
+// Authentication Challenge 
+app.post("/authenticate", async (req, res) => {
+  const { walletAddress } = req.body;
 
-    res.send('Hello, TypeScript!');
+  if (!walletAddress || !ethers.isAddress(walletAddress)) {
+    return res.status(400).json({ error: "Invalid wallet address" });
+  }
 
-    if (checkAuth(username)) {
-        res.send('Authenticated!');
+  // Generate a One-Time Challenge 
+  const challenge = `Sign this message to prove ownership: ${walletAddress}-${Date.now()}`;
+
+  res.json({ challenge });
+});
+
+// Verify Signature and Issue JWT
+app.post("/verify-signature", async (req, res) => {
+  const { walletAddress, signedMessage, challenge } = req.body;
+
+  if (!walletAddress || !signedMessage || !challenge) {
+    return res.status(400).json({ error: "Missing parameters" });
+  }
+
+  try {
+    // Recover Address from Signature
+    const recoveredAddress = ethers.verifyMessage(challenge, signedMessage);
+
+    if (recoveredAddress.toLowerCase() !== walletAddress.toLowerCase()) {
+      return res.status(401).json({ error: "Signature mismatch!" });
     }
-    else {
-        res.send('Not authenticated - call /authenticate');
-    }
 
+    // Generate JWT
+    const token = generateToken(walletAddress);
+    return res.json({ success: true, message: "Authentication successful!", token });
+  } catch (error) {
+    return res.status(500).json({ error: "Signature verification failed", details: error.message });
+  }
+});
+
+// Middleware: Authenticate Requests Using JWT
+function authenticateToken(req, res, next) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) return res.status(401).json({ error: "Missing token" });
+
+  const token = authHeader.split(" ")[1];
+
+  jwt.verify(token, SECRET_KEY, (err, decoded) => {
+    if (err) return res.status(403).json({ error: "Invalid token" });
+
+    req.locals = { walletAddress: decoded.walletAddress };
+    next();
+  });
+}
+
+// Protected Route (Only Authenticated Agents Can Access)
+app.get("/secure-data", authenticateToken, async (req, res) => {
+  return res.json({ success: true, data: `This is protected data for ${req.locals.walletAddress}` });
 });
 
 
-app.get('/authenticate', (req, res) => {
-    //TODO check if user has been authenticated before
 
-    const { walletAddress } = req.body;
-    
-    if (!walletAddress) {
-        res.status(400).json({ error: "Missing wallet address" });
-    }
-
-    // Generate a unique challenge message
-    const challenge = `Sign this message to prove ownership: ${Date.now()}`;
-    
-    // Store it temporarily (map it to walletAddress)
-    challenges[walletAddress] = challenge;
-
-    res.json({ challenge });
-});
-
-app.post("/verify-signature", (req, res) => {
-    const { walletAddress, signedMessage } = req.body;
-
-    if (!walletAddress || !signedMessage) {
-         res.status(400).json({ error: "Missing parameters" });
-    }
-
-    const originalMessage = challenges[walletAddress];
-    if (!originalMessage) {
-         res.status(400).json({ error: "Challenge expired or not found" });
-    }
-
+app.get('/records', async (req, res) => {
     try {
-        // Recover the signer address from the signed message
-        const recoveredAddress = ethers.verifyMessage(originalMessage, signedMessage);
-
-        if (recoveredAddress.toLowerCase() === walletAddress.toLowerCase()) {
-            delete challenges[walletAddress]; // Clear used challenge
-            res.json({ success: true, message: "Signature verified!" });
-        } else {
-            res.status(401).json({ error: "Signature mismatch!" });
-        }
-    } catch (error) {
-        res.status(500).json({ error: "Signature verification failed", details: error });
-    }
-});
-
-
-app.post('/read', async (req, res) => {
-  const { key } = req.params;
-  const { username } = req.body;
-
-    if(!checkAuth(username)) {
-      res.status(401).json({ error: 'Not authenticated - call /authenticate' })
-    }
-
-    try {
-      const records = await read(key)
+      const records = await db.getAllRecords()
       res.json({ records })
     } catch (error) {
       res.status(500).json({ error: error })
     }
   })
-
-  app.post('/upsert', async (req, res) => {
-    const { key } = req.params;
-    const { username, value } = req.body;
   
-      if(!checkAuth(username)) {
-        res.status(401).json({ error: 'Not authenticated - call /authenticate' })
+  app.post('/records', async (req, res) => {
+    try {
+      const { value } = req.body
+      if (!value) {
+        res.status(400).json({ error: 'Value is required' })
       }
   
-      try {
-        let insertedKey
-        if(!key){
-          insertedKey = await upsert(value)
-        }
-        else{
-          insertedKey = await upsert(value, key)
-        }
+      await add(value)
+      res.json({ success: true, message: 'Record added' })
+    } catch (error) {
+      res.status(500).json({ error: error })
+    }
+  })
 
-        res.json({ insertedKey })
-      } catch (error) {
-        res.status(500).json({ error: error })
-      }
-    })
-
-  app.post('/remove', async (req, res) => {
-    const { key } = req.params;
-    const { username } = req.body;
-  
-      if(!checkAuth(username)) {
-        res.status(401).json({ error: 'Not authenticated - call /authenticate' })
-      }
-  
-      try {
-        const insertedKey = await remove(key)
-
-        res.json({ insertedKey })
-      } catch (error) {
-        res.status(500).json({ error: error })
-      }
-    })
+app.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}`);
+});
