@@ -22,6 +22,7 @@
     "@chainsafe/libp2p-gossipsub": "^14.1.0",
     "@orbitdb/core": "^2.4.3",
     "blockstore-level": "^2.0.1",
+    "cors": "^2.8.5",
     "express": "^4.21.2",
     "helia": "^5.2.0"
   }
