@@ -1,10 +1,13 @@
 import express from "express";
 import axios from "axios";
+import { LRUCache } from "./LRUcache.js";
 
 const app = express();
 const port = process.env.PORT || 8030;
 
 app.use(express.json()); // Middleware to parse JSON requests
+
+const cache = new LRUCache(100);
 
 // Broker object to store subscriber addresses
 const nodeStore = {
@@ -51,6 +54,15 @@ app.post("/subscribe", (req, res) => {
 
 
 app.post("/query", async (req, res) => {
+    const { operation, data } = req.body;
+
+    if(operation === "READ" && data._id){
+        const cachedResponse = cache.get(data._id);
+        if (cachedResponse) {
+          console.log(`Cache hit for key: ${data._id}`);
+          return res.json({ fromCache: true, data: cachedResponse });
+        }
+    }
     const node = getNextNode();
     console.log("Node:", node);
     if (!node) {
@@ -59,6 +71,17 @@ app.post("/query", async (req, res) => {
 
     try {
         const response = await axios.post(`http://${node}/handleRequest`, req.body);
+        if(operation === "READ" && data._id){
+            cache.set(data._id, response.data);
+        }
+        if(operation === "DELETE" && data._id){
+            cache.cache.delete(data._id); // Remove from cache
+            console.log(`Cache entry removed for key: ${data._id}`);
+        }
+        if((operation === "CREATE" || operation === "UPDATE") && data._id){
+            cache.set(data._id, data); // Store value in cache
+            console.log(`Cache updated for key: ${data._id}`);
+        }
         res.json(response.data);
     } catch (error) {
         console.error(`Error forwarding request to ${node}:`, error.message);
