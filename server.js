@@ -12,33 +12,36 @@ async function setupDB() {
   const ipfs = await createHelia({ libp2p, blockstore })
   const orbitdb = await createOrbitDB({ ipfs })
   
-  db = await orbitdb.open('my-db')
+  db = await orbitdb.open('my-db', { type: 'documents' })
   console.log('Database ready at:', db.address)
 }
 
 setupDB().catch(console.error)
 
+function createBaseDocument(key) {
+  // _id is a orbitdb specific thing so dont change this as the key
+  return {
+    _id: key,
+    timestamp: new Date().getTime()
+  }
+}
 //CRUD
 
-// Create
-
-export const add = async (value) => {
-  return db.put({ value })
+// Update or Create if key isn't specified
+export const upsert = async (value, key = randomUUID()) => {
+  await db.put({ ...createBaseDocument(key), data: value })
+  return key
 }
 
 // Read
-export const read = async (hash) => {
-  return db.get(hash)
-}
-
-// Update
-export const update = async (hash, value) => {
-  return db.put(hash, { value })
+export const read = async (key) => {
+  return await db.get({_id: key})
 }
 
 // Delete
-export const remove = async (hash) => {
-  return db.del(hash)
+export const remove = async (key) => {
+  await db.del({_id: key})
+  return key
 }
 
 // getAllRecords
@@ -46,29 +49,6 @@ export async function getAllRecords() {
   if (!db) throw new Error('Database not initialized')
   return await db.all()
 }
-
-// app.get('/records', async (req, res) => {
-//   try {
-//     const records = await db.all()
-//     res.json({ records })
-//   } catch (error) {
-//     res.status(500).json({ error: error.message })
-//   }
-// })
-
-// app.post('/records', async (req, res) => {
-//   try {
-//     const { value } = req.body
-//     if (!value) {
-//       return res.status(400).json({ error: 'Value is required' })
-//     }
-
-//     await db.add(value)
-//     res.json({ success: true, message: 'Record added' })
-//   } catch (error) {
-//     res.status(500).json({ error: error.message })
-//   }
-// })
 
 const PORT = 3000
 app.listen(PORT, () => {

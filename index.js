@@ -9,6 +9,11 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 
+function checkAuth(username){
+    const users = readFile('users.txt', 'utf8');
+    return users.includes(username);
+}
+
 const challenges = {};
 
 app.get('/', async (req, res) => {
@@ -17,7 +22,7 @@ app.get('/', async (req, res) => {
     res.send('Hello, TypeScript!');
     const users = await readFile('users.txt', 'utf8');
 
-    if (users.includes(username)){
+    if (checkAuth(username)) {
         res.send('Authenticated!');
     }
     else {
@@ -73,24 +78,40 @@ app.post("/verify-signature", (req, res) => {
 });
 
 
-app.get('/records', async (req, res) => {
+app.post('/read', async (req, res) => {
+  const { key } = req.params;
+  const { username } = req.body;
+
+    if(!checkAuth(username)) {
+      res.status(401).json({ error: 'Not authenticated - call /authenticate' })
+    }
+
     try {
-      const records = await db.getAllRecords()
+      const records = await read(key)
       res.json({ records })
     } catch (error) {
       res.status(500).json({ error: error })
     }
   })
   
-  app.post('/records', async (req, res) => {
-    try {
-      const { value } = req.body
-      if (!value) {
-        res.status(400).json({ error: 'Value is required' })
+  app.post('/upsert', async (req, res) => {
+    const { key } = req.params;
+    const { username, value } = req.body;
+  
+      if(!checkAuth(username)) {
+        res.status(401).json({ error: 'Not authenticated - call /authenticate' })
       }
   
-      await add(value)
-      res.json({ success: true, message: 'Record added' })
+      try {
+        let insertedKey
+        if(!key){
+          insertedKey = await upsert(value)
+        }
+        else{
+          insertedKey = await upsert(value, key)
+        }
+
+        res.json({ insertedKey })
     } catch (error) {
       res.status(500).json({ error: error })
     }
