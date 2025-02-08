@@ -2,12 +2,10 @@
 import { spawn } from "child_process";
 import { execSync } from "child_process";
 
-let n = parseInt(process.argv[2]) || 1;
 let children = [];
-let nodePath = process.execPath;
 const PORT = 3001;
-const NUM_REPLICAS = 1;
-const STATIC_IP = "192.168.1.100"
+const NUM_REPLICAS = parseInt(process.argv[2]) || 1;;
+const STATIC_ROOT_IP = "192.168.1.100"
 const NETWORK_NAME = "orbitdb-net";
 
 try {
@@ -23,7 +21,7 @@ const initChild = spawn('docker', [
     'run', '--rm',
     '-p', `${PORT}:3000`,//map to port 3000 which we hardcode below as the port to listen on inside of the container
     '--network', NETWORK_NAME,
-    '--ip', STATIC_IP, // Set static IP
+    '--ip', STATIC_ROOT_IP, // Set static IP
     '-e', `PORT=3000`,
     '-e', `NUM_REPLICAS=${NUM_REPLICAS}`,
     '--name', 'dbservice', 'dbservice'
@@ -52,7 +50,7 @@ initChild.stdout.on('data', (data) => {
         children.push(
             spawn('docker', [
                 'run', '--rm',
-                '--network=orbitdb-net',
+                '--network', NETWORK_NAME,
                 '-p', `${PORT+i}:3000`,//map to port 3000 which we hardcode below
                 '-e', `PORT=3000`,
                 '-e', `REPLICA=yes`,

@@ -1,0 +1,32 @@
+{
+  "name": "torus-eth-oxford",
+  "version": "1.0.0",
+  "description": "agents for torus network",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "node index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.13.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.3"
+  },
+  "dependencies": {
+    "@chainsafe/libp2p-gossipsub": "^14.1.0",
+    "@orbitdb/core": "^2.4.3",
+    "blockstore-level": "^2.0.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "ethers": "^6.13.5",
+    "event-target-shim": "^6.0.2",
+    "express": "^4.21.2",
+    "helia": "^5.2.0",
+    "jsonwebtoken": "^9.0.2"
+  }
+}

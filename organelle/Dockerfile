@@ -19,7 +19,6 @@ RUN npm install
 # Copy the rest of the app
 COPY server.js .
 COPY config/ ./config/
-COPY orbitdb-peer/ ./orbitdb-peer/
 
 # Expose the port
 EXPOSE 3000
