@@ -1,9 +1,9 @@
 {
   "name": "torus-eth-oxford",
   "version": "1.0.0",
-  "type": "module",
   "description": "agents for torus network",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "build": "tsc",
     "start": "node index.js",

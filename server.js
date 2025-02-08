@@ -17,8 +17,3 @@ async function setupDB() {
 }
 
 setupDB().catch(console.error)
-
-const PORT = 3000
-app.listen(PORT, () => {
-  console.log(`API running on http://localhost:${PORT}`)
-})
