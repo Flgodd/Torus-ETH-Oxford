@@ -18,10 +18,36 @@
     <br>
 
     <!-- ✅ Add event listener in app.js -->
-    <button id="establishConnectionBtn">Establish Connection</button> 
+    <button id="establishConnectionBtn" onclick="establishConnection">Establish Connection</button> 
 
     <p class="status" id="statusMessage"></p>
 
 </body>
+
+<script>
+    function establishConnection() {
+        const privateKey = document.getElementById("walletAddress").value.trim();
+        const statusMessage = document.getElementById("statusMessage");
+
+        // ✅ Check if the input is empty
+        if (!privateKey) {
+            statusMessage.textContent = "❌ Error: Private key cannot be empty.";
+            statusMessage.style.color = "red";
+            return;
+        }
+
+        // ✅ Validate private key format (Ethereum-style: 0x + 40 hex characters)
+        const privateKeyRegex = /^0x[a-fA-F0-9]{40}$/;
+        if (!privateKeyRegex.test(privateKey)) {
+            statusMessage.textContent = "❌ Error: Invalid private key format.";
+            statusMessage.style.color = "red";
+            return;
+        }
+
+        // ✅ If everything is valid, proceed with success message
+        statusMessage.textContent = "✅ Success!";
+        statusMessage.style.color = "green";
+    }
+</script>
 
 </html>
