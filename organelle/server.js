@@ -1,23 +1,5 @@
-import { createLibp2p } from 'libp2p'
-import { createHelia } from 'helia'
-import { createOrbitDB } from '@orbitdb/core'
-import { LevelBlockstore } from 'blockstore-level'
-import { Libp2pOptions } from './config/libp2p.js'
-import { randomUUID } from 'crypto'
-import { multiaddr } from '@multiformats/multiaddr'
-import { IPFSAccessController } from '@orbitdb/core'
 import express from 'express';
-
-if (typeof globalThis.CustomEvent === "undefined") {
-  globalThis.CustomEvent = class CustomEvent extends Event {
-      constructor(event, params = {}) {
-          super(event, params);
-          this.detail = params.detail || null;
-      }
-  };
-}
-
-global.CustomEvent = CustomEvent; // Make it available globally
+import {db} from './database.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;

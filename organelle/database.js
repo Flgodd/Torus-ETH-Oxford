@@ -1,24 +1,43 @@
+import { createLibp2p } from 'libp2p'
+import { createHelia } from 'helia'
+import { createOrbitDB } from '@orbitdb/core'
+import { LevelBlockstore } from 'blockstore-level'
+import { Libp2pOptions } from './config/libp2p.js'
+import { randomUUID } from 'crypto'
+import { multiaddr } from '@multiformats/multiaddr'
+import { IPFSAccessController } from '@orbitdb/core'
+
+//i dont know why we need this at all
+if (typeof globalThis.CustomEvent === "undefined") {
+    globalThis.CustomEvent = class CustomEvent extends Event {
+        constructor(event, params = {}) {
+            super(event, params);
+            this.detail = params.detail || null;
+        }
+    };
+  }
+  
+global.CustomEvent = CustomEvent; // Make it available globally
+
 export let db;
 let ipfs;
 let orbitdb;
 let randDir = (Math.random() + 1).toString(36).substring(2)
 
+
 const REPLICA = process.env.REPLICA || false;
 const DBADDR = process.env.DBADDR || null;
 const MULTIADDR = process.env.MULTIADDR || null;
 
+const blockstore = new LevelBlockstore(`./dbdata/${randDir}/ipfs/blocks`)
+const libp2p = await createLibp2p(Libp2pOptions)
+
 //for setting up initial root db
 async function setupDB() {
-  const blockstore = new LevelBlockstore(`./dbdata/${randDir}/ipfs/blocks`)
-  console.log("poo")
-  const libp2p = await createLibp2p(Libp2pOptions)
-  console.log("poo1 ")
   ipfs = await createHelia({ libp2p, blockstore })
-
   orbitdb = await createOrbitDB({ ipfs, directory: `./dbdata/${randDir}/orbitdb` })
   
   db = await orbitdb.open('my-db', { AccessController: IPFSAccessController({ write: ['*']}), type: 'documents' })
-  console.log("poo2")
   console.log('Database ready at:', db.address, orbitdb.ipfs.libp2p.getMultiaddrs()[0].toString())
   
   db.events.on('update', async (entry) => {
@@ -35,11 +54,7 @@ async function setupDB() {
 
 //replica children
 async function setupReplica() {
-    
-  const blockstore = new LevelBlockstore(`./dbdata/${randDir}/ipfs/blocks`)
-  const libp2p = await createLibp2p(Libp2pOptions)
   ipfs = await createHelia({ libp2p, blockstore })
-
   orbitdb = await createOrbitDB({ ipfs, directory: `./dbdata/${randDir}/orbitdb` })
   
   // dial into known stable node (root)
@@ -52,7 +67,7 @@ async function setupReplica() {
 }
 
 if(REPLICA) {
-  console.log('ssetting up replic')
+  console.log('setting up replica')
   setupReplica().catch(console.error)
 }
 else {
