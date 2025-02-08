@@ -1,11 +1,12 @@
 {
   "name": "torus-eth-oxford",
   "version": "1.0.0",
-  "type": "module",
   "description": "agents for torus network",
   "main": "index.js",
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc",
+    "start": "node index.js"
   },
   "keywords": [],
   "author": "",
@@ -21,6 +22,7 @@
     "@orbitdb/core": "^2.4.3",
     "blockstore-level": "^2.0.1",
     "cors": "^2.8.5",
+    "ethers": "^6.13.5",
     "express": "^4.21.2",
     "helia": "^5.2.0"
   }
