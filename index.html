@@ -1,29 +1,27 @@
-
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <title>MetaMask Authentication</title>
-    <!-- ✅ Load Ethers.js from CDN -->
-    <script src="https://cdn.ethers.io/lib/ethers-5.7.umd.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Organ - Secure Authentication</title>
+    <link rel="stylesheet" href="./style.css">
+    <script defer src="app.js"></script>
 </head>
+
 <body>
-    <button onclick="authenticate()">Authenticate with MetaMask</button>
 
-    <script>
-        
-        async function authenticate() {
-            if (!window.ethereum) {
-                alert("⚠️ MetaMask is not installed. Please install it to continue.");
-                return;
-            }
+    <h2>Memory Organ - Secure Authentication</h2>
 
-            const provider = new ethers.providers.Web3Provider(window.ethereum);
-            await provider.send("eth_requestAccounts", []); // Request MetaMask access
-            const signer = provider.getSigner();
-            const walletAddress = await signer.getAddress();
-            console.log("✅ Connected Wallet Address:", walletAddress);
-            alert("Connected Wallet: " + walletAddress);
-        }
-    </script>
+    <!-- ✅ Input box for private key -->
+    <input type="text" id="walletAddress" placeholder="Enter your private key">
+    <br>
+
+    <!-- ✅ Add event listener in app.js -->
+    <button id="establishConnectionBtn">Establish Connection</button> 
+
+    <p class="status" id="statusMessage"></p>
+
 </body>
+
 </html>
