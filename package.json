@@ -1,13 +1,10 @@
 {
   "name": "torus-eth-oxford",
-  "type": "module",
   "version": "1.0.0",
   "description": "agents for torus network",
   "main": "index.js",
   "scripts": {
-    "build": "tsc",
-    "start": "node index.js",
-    "dev": "ts-node index.ts"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
@@ -22,6 +19,7 @@
     "@chainsafe/libp2p-gossipsub": "^14.1.0",
     "@orbitdb/core": "^2.4.3",
     "blockstore-level": "^2.0.1",
+    "cors": "^2.8.5",
     "ethers": "^6.13.5",
     "express": "^4.21.2",
     "helia": "^5.2.0"
