@@ -1,76 +1,87 @@
-import express from 'express';
-import { ethers } from 'ethers';
-import { readFile } from "fs/promises";
-import {db} from './server.js';
-import { add, read, update, remove, getAllRecords } from './server.js'
+import express from "express";
+import { ethers } from "ethers";
+import jwt from "jsonwebtoken";
+import dotenv from "dotenv";
+import cors from "cors";
+
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const SECRET_KEY = process.env.JWT_SECRET || "your_secret_key";
+const TOKEN_EXPIRATION = process.env.TOKEN_EXPIRATION || "1h";
 
 app.use(express.json());
+app.use(cors());
 
-const challenges = {};
+// Generate JWT Token
+function generateToken(walletAddress) {
+  return jwt.sign({ walletAddress }, SECRET_KEY, { expiresIn: TOKEN_EXPIRATION });
+}
 
-app.get('/', async (req, res) => {
-    const { username } = req.body;
-
-    res.send('Hello, TypeScript!');
-    const users = await readFile('users.txt', 'utf8');
-
-    if (users.includes(username)){
-        res.send('Authenticated!');
-    }
-    else {
-        res.send('Not authenticated - call /authenticate');
-    }
-
+//  Welcome Route
+app.get("/", (req, res) => {
+  res.send("Welcome to the Agent Authentication API! Use /authenticate to start.");
 });
 
+// Authentication Challenge 
+app.post("/authenticate", async (req, res) => {
+  const { walletAddress } = req.body;
 
-app.get('/authenticate', (req, res) => {
-    //TODO check if user has been authenticated before
+  if (!walletAddress || !ethers.isAddress(walletAddress)) {
+    return res.status(400).json({ error: "Invalid wallet address" });
+  }
 
-    const { walletAddress } = req.body;
-    
-    if (!walletAddress) {
-        res.status(400).json({ error: "Missing wallet address" });
-    }
+  // Generate a One-Time Challenge 
+  const challenge = `Sign this message to prove ownership: ${walletAddress}-${Date.now()}`;
 
-    // Generate a unique challenge message
-    const challenge = `Sign this message to prove ownership: ${Date.now()}`;
-    
-    // Store it temporarily (map it to walletAddress)
-    challenges[walletAddress] = challenge;
-
-    res.json({ challenge });
+  res.json({ challenge });
 });
 
-app.post("/verify-signature", (req, res) => {
-    const { walletAddress, signedMessage } = req.body;
+// Verify Signature and Issue JWT
+app.post("/verify-signature", async (req, res) => {
+  const { walletAddress, signedMessage, challenge } = req.body;
 
-    if (!walletAddress || !signedMessage) {
-         res.status(400).json({ error: "Missing parameters" });
+  if (!walletAddress || !signedMessage || !challenge) {
+    return res.status(400).json({ error: "Missing parameters" });
+  }
+
+  try {
+    // Recover Address from Signature
+    const recoveredAddress = ethers.verifyMessage(challenge, signedMessage);
+
+    if (recoveredAddress.toLowerCase() !== walletAddress.toLowerCase()) {
+      return res.status(401).json({ error: "Signature mismatch!" });
     }
 
-    const originalMessage = challenges[walletAddress];
-    if (!originalMessage) {
-         res.status(400).json({ error: "Challenge expired or not found" });
-    }
-
-    try {
-        // Recover the signer address from the signed message
-        const recoveredAddress = ethers.verifyMessage(originalMessage, signedMessage);
-
-        if (recoveredAddress.toLowerCase() === walletAddress.toLowerCase()) {
-            delete challenges[walletAddress]; // Clear used challenge
-            res.json({ success: true, message: "Signature verified!" });
-        } else {
-            res.status(401).json({ error: "Signature mismatch!" });
-        }
-    } catch (error) {
-        res.status(500).json({ error: "Signature verification failed", details: error });
-    }
+    // Generate JWT
+    const token = generateToken(walletAddress);
+    return res.json({ success: true, message: "Authentication successful!", token });
+  } catch (error) {
+    return res.status(500).json({ error: "Signature verification failed", details: error.message });
+  }
 });
+
+// Middleware: Authenticate Requests Using JWT
+function authenticateToken(req, res, next) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) return res.status(401).json({ error: "Missing token" });
+
+  const token = authHeader.split(" ")[1];
+
+  jwt.verify(token, SECRET_KEY, (err, decoded) => {
+    if (err) return res.status(403).json({ error: "Invalid token" });
+
+    req.locals = { walletAddress: decoded.walletAddress };
+    next();
+  });
+}
+
+// Protected Route (Only Authenticated Agents Can Access)
+app.get("/secure-data", authenticateToken, async (req, res) => {
+  return res.json({ success: true, data: `This is protected data for ${req.locals.walletAddress}` });
+});
+
 
 
 app.get('/records', async (req, res) => {
