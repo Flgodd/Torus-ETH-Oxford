@@ -3,6 +3,8 @@ import { ethers } from "ethers";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import cors from "cors";
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 dotenv.config();
 
@@ -19,9 +21,14 @@ function generateToken(walletAddress) {
   return jwt.sign({ walletAddress }, SECRET_KEY, { expiresIn: TOKEN_EXPIRATION });
 }
 
+// Get the directory path
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
 //  Welcome Route
 app.get("/", (req, res) => {
-  res.send("Welcome to the Agent Authentication API! Use /authenticate to start.");
+  // res.send("Welcome to the Agent Authentication API! Use /authenticate to start.");
+  res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 // Authentication Challenge 
