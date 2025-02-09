@@ -22,29 +22,29 @@ async function registerWithBroker() {
 
 // ✅ Read data
 app.post("/read", async (req, res) => {
-    const {data} = req.body;
+    const { data } = req.body;
     const value = await readData(data._id);
-    console.log('value: ', value)
     if (!value) return res.status(404).json({error: "Key not found"});
+    res.json({ success: true, message: "Data retrieved successfully", data: value });
 });
 
 // ✅ Store data
 app.post("/create", async (req, res) => {
-    const { value } = req.body;
-    if (!value) return res.status(400).json({ error: "Value required" });
-    await createData(value);
-    res.json({ success: true, message: "Data stored successfully" });
+    const { data } = req.body;
+    if (!data) return res.status(400).json({ error: "Value required" });
+    const key = await createData(data);
+    res.json({ success: true, message: "Data stored successfully", key: key });
 });
 
 // ✅ Store data
 app.post("/update", async (req, res) => {
     const { key, value } = req.body;
     if (!key || !value) return res.status(400).json({ error: "Key and value required" });
-    await updateData(key, value);
-    res.json({ success: true, message: "Data updated successfully" });
+    const data = await updateData(key, value);
+    res.json({ success: true, message: "Data updated successfully", key: key, data: data });
 });
 
-// ✅ Remove data - NEEDS A SECOND LOOK
+// ✅ Remove data
 app.delete("/delete", async (req, res) => {
     const { key } = req.body;
     await deleteData(key);

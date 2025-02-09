@@ -7,6 +7,25 @@ const port = 8030;
 
 app.use(express.json());
 
+import jwt from "jsonwebtoken";
+
+const authenticateToken = (req, res, next) => {
+    const token = req.header("Authorization")?.split(" ")[1]; // Expect "Bearer <token>"
+
+    if (!token) {
+        return res.status(401).json({ error: "Access denied. No token provided." });
+    }
+
+    jwt.verify(token, "1d7f0787628387697bb054a6b966b04b210b50af3e2ffc57045e83e9e7ef6237", (err, user) => {
+        if (err) {
+            return res.status(403).json({ error: "Invalid token." });
+        }
+
+        req.user = user; // Attach decoded payload to req
+        next();
+    });
+};
+
 const cache = new LRUCache(100);
 
 const nodeStore = {
@@ -47,7 +66,7 @@ app.post("/subscribe", (req, res) => {
     }
 });
 
-app.post("/query", async (req, res) => {
+app.post("/query", authenticateToken, async (req, res) => {
     if (requestQueue.length >= MAX_QUEUE_SIZE) {
         return res.status(503).json({ msg: "Server busy, try again later" });
     }
@@ -80,7 +99,7 @@ async function processQueue(){
         console.log(`Forwarding request to node: ${node}`);
         if (operation === "READ" && data._id) {
             console.log('sexy body ben aam: ,', req.body)
-            response = await axios.post(`http://${node}/read`, req.body)
+            response = await axios.get(`http://${node}/read`, req.param)
             cache.set(data._id, response.data);
         }
         else if (operation === "DELETE" && data._id) {
@@ -99,7 +118,7 @@ async function processQueue(){
 
         res.json(response.data);
     }catch(error){
-        console.error(`Error forwarding request to ${node}:`, error.message, response.body.error);
+        console.error(`Error forwarding request to ${node}:`, error.message, response?.data);
         res.status(500).json({ msg: `Failed to forward request to node ${node}` });
     }
 }
