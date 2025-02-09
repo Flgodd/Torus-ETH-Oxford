@@ -13,7 +13,7 @@ async function validateAddress() {
     }
 
     try {
-        // ✅ Step 1: Send Address to Backend for Validation
+        // Send Address to Backend for Validation
         const response = await fetch(`${API_URL}/validate-wallet`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -26,7 +26,7 @@ async function validateAddress() {
             statusMessage.textContent = `✅ Address is valid. Now sign the message.`;
             statusMessage.style.color = "green";
 
-            // ✅ Show the Sign Button
+            
             document.getElementById("signButton").style.display = "block";
         } else {
             statusMessage.textContent = "❌ Invalid wallet address!";
@@ -52,7 +52,7 @@ async function signMessage() {
 
     try {
 
-        // ✅ Step 1: Ensure Polkadot.js Extension is Installed
+        // Ensure Polkadot.js Extension is Installed
         if (!window.injectedWeb3 || !window.injectedWeb3["polkadot-js"]) {
             console.error("🚨 Polkadot.js extension not detected!");
             statusMessage.textContent = "❌ Polkadot.js extension not found. Please install and enable it.";
@@ -60,11 +60,11 @@ async function signMessage() {
             return;
         }
 
-        // ✅ Step 2: Enable the Extension via `window.injectedWeb3`
+        // Enable the Extension via `window.injectedWeb3`
         const polkadotExtension = await window.injectedWeb3["polkadot-js"].enable();
         console.log("✅ Polkadot.js extension enabled:", polkadotExtension);
 
-        // ✅ Step 3: Get Accounts Using `window.injectedWeb3`
+        // Get Accounts Using `window.injectedWeb3`
         const accounts = await polkadotExtension.accounts.get();
         console.log("✅ Retrieved accounts:", accounts);
 
@@ -74,7 +74,7 @@ async function signMessage() {
             return;
         }
 
-        // ✅ Step 4: Find the User's Account
+        // Find the User's Account
         const account = accounts.find(acc => acc.address === walletAddress);
         if (!account) {
             statusMessage.textContent = "❌ Wallet not found in Polkadot.js extension!";
@@ -82,7 +82,7 @@ async function signMessage() {
             return;
         }
 
-        // ✅ Step 5: Request Challenge from Backend
+        //  Request Challenge from Backend
         const challengeResponse = await fetch(`${API_URL}/authenticate`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -98,7 +98,7 @@ async function signMessage() {
             throw new Error("Signer not available!");
         }
 
-        // ✅ Step 6: Sign the Message (Challenge)
+        // Sign the Message (Challenge)
         const { signature } = await signer.signRaw({
             address: walletAddress,
             data: challenge,
@@ -107,7 +107,7 @@ async function signMessage() {
 
         console.log("✅ Signed Message:", signature);
 
-        // ✅ Step 6: Send Signed Message to Backend
+        // ✅ Send Signed Message to Backend
         const verifyResponse = await fetch(`${API_URL}/verify-signature`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
