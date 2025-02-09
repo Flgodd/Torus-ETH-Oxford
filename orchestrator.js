@@ -6,7 +6,7 @@ dotenv.config();
 
 let children = [];
 const MAP_PORT = 3001;
-const NUM_REPLICAS = parseInt(process.argv[2]) || 1;;
+const NUM_REPLICAS = parseInt(process.argv[2]) || 1;
 const STATIC_ROOT_IP = "192.168.1.100"
 const NETWORK_NAME = "orbitdb-net";
 

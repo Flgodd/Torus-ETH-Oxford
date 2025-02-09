@@ -3,7 +3,6 @@ import {createHelia} from 'helia'
 import {createOrbitDB, IPFSAccessController} from '@orbitdb/core'
 import {LevelBlockstore} from 'blockstore-level'
 import {Libp2pOptions} from './config/libp2p.js'
-import {randomUUID} from 'crypto'
 import {multiaddr} from '@multiformats/multiaddr'
 import Database from "better-sqlite3";
 import axios from 'axios'
@@ -28,7 +27,6 @@ const REPLICA = process.env.REPLICA || false;
 const DBADDR = process.env.DBADDR || null;
 const MULTIADDR = process.env.MULTIADDR || null;
 const NODE_NUMBER = process.env.NODE_NUMBER || null;
-const CACHE_MAX_SIZE = 500;
 
 const blockstore = new LevelBlockstore(`./dbdata/${randDir}/ipfs/blocks`)
 const libp2p = await createLibp2p(Libp2pOptions)
