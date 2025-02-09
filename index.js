@@ -83,7 +83,7 @@ app.post("/verify-signature", async (req, res) => {
       }
 
       // Generate JWT for Authentication
-      const token = jwt.sign({ walletAddress }, SECRET_KEY, { expiresIn: "1h" });
+      const token = jwt.sign({ walletAddress }, SECRET_KEY, { expiresIn: "24h" });
       res.json({ success: true, token });
 
   } catch (error) {
