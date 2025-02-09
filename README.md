@@ -13,16 +13,33 @@
 
 ## Requirements
 
-- Docker
-- Node
+- [Docker](https://docs.docker.com/engine/install/) - Ensure Docker is installed and running 
+- [Node](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) - Node.js and npm
 
 ## Quick Start
 
 To run Decentralised Memory Organ
 ```
 npm install
-npm run start
+node index.js
 ```
+
+If docker is running, you should see the the following print outs of the health checks of the nodes. It may take some time to startup. 
+
+```
+Health check [PASSED] for localhost:3001
+Health check [PASSED] for localhost:3002
+...
+```
+
+###### Authorisation Token
+
+Connect your wallet via the *index.html* to get authorisation to make requests. 
+
+###### Running Locally
+
+Make requests to http://localhost:3000/ with your Authorization Header. 
+
 
 ---
 
@@ -90,6 +107,9 @@ DMO supports **structured data storage** beyond simple key-value pairs. The data
 1. Agent signs a challenge with their **wallet’s private key**.
 2. Signature is verified against the agent’s **public wallet address**.
 3. If authentication is successful, the agent receives a **session token** for future API interactions.
+```
+Bearer <token>
+```
 
 ### **4.2 CRUD Operations**
 | Operation     | Description |
@@ -178,3 +198,49 @@ The system provides a REST API for agent interactions.
 Requests require:
 - **Authorization header** with a signed message.
 - Agents must sign a **nonce challenge** before each session.
+
+### API Schemas
+
+#### CREATE:
+```json
+{
+  "operation": "CREATE",
+  "data": {
+    "key": "<resource_key>",
+    "value": {
+      "<item_id>": { "<attribute>": "<value>", "<attribute>": "<value>" }
+    }
+  }
+}
+```
+
+#### READ:
+```json
+{
+  "operation": "READ",
+  "data": {
+    "key": "<resource_key>"
+  }
+}
+```
+
+#### UPDATE:
+```json
+{
+  "operation": "UPDATE",
+  "data": {
+    "key": "<resource_key>",
+    "value": "<new_value>"
+  }
+}
+```
+
+#### DELETE:
+```json
+{
+  "operation": "DELETE",
+  "data": {
+    "key": "<resource_key>"
+  }
+}
+```

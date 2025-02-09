@@ -123,9 +123,15 @@ async function signMessage() {
 
         if (verifyResult.success) {
             localStorage.setItem("authToken", verifyResult.token);
-            statusMessage.textContent = `✅ Authentication successful for wallet address: ${walletAddress}`;
-
-            statusMessage.style.color = "green";
+            statusMessage.innerHTML = `
+        ✅ Authentication successful for wallet address: <strong>${walletAddress}</strong> <br><br>
+        <div class="token-container">
+            <strong>Token:</strong> <span>${verifyResult.token.substring(0, 20)}...</span>
+            <span id="fullToken" class="token-hidden">${verifyResult.token.substring(20)}</span>
+            <button id="toggleBtn" class="toggle-btn" onclick="toggleToken()">Show More</button>
+        </div>
+    `;
+           
         } else {
             statusMessage.textContent = "❌ Authentication failed!";
             statusMessage.style.color = "red";
@@ -135,6 +141,19 @@ async function signMessage() {
         console.error("🚨 Signing error:", error);
         statusMessage.textContent = "❌ Error signing message.";
         statusMessage.style.color = "red";
+    }
+}
+
+function toggleToken() {
+    const fullToken = document.getElementById("fullToken");
+    const btnText = document.getElementById("toggleBtn");
+
+    if (fullToken.classList.contains("token-hidden")) {
+        fullToken.classList.remove("token-hidden");
+        btnText.textContent = "Show Less";
+    } else {
+        fullToken.classList.add("token-hidden");
+        btnText.textContent = "Show More";
     }
 }
 

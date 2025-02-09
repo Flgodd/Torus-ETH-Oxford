@@ -1,6 +1,7 @@
 import express from "express";
 import axios from "axios";
 import { LRUCache } from "./LRUcache.js";
+import { fork } from "child_process";
 
 const app = express();
 const port = 8030;
@@ -75,6 +76,10 @@ app.post("/query", authenticateToken, async (req, res) => {
     requestQueue.push(request);
 });
 
+app.get("/nodelistLength", async (req, res) => {
+    return res.json({length: nodeStore.nodes.length});
+});
+
 async function processQueue(){
     if(requestQueue.length === 0) return;
 
@@ -110,7 +115,8 @@ async function processQueue(){
             console.log(`Cache updated for key: ${data.key}`);
         }
         else if (operation === "DELETE") {
-            response = await axios.delete(`http://${node}/delete`, { params: { key: data.key }});
+            console.log("cuntuntuntuntunttu: ", data.key)
+            response = await axios.post(`http://${node}/delete`, data.key);
             cache.cache.delete(data.key);
             console.log(`Cache entry removed for key: ${data.key}`);
         }
@@ -152,6 +158,8 @@ app.get("/qstatus", (req, res) => {
     res.json({ status: broker.QState });
 });
 
-app.listen(port, () => {
+app.listen(port, '0.0.0.0', () => {
     console.log(`Broker listening on port ${port}`);
+    console.log("Starting organelles....");
+    fork("./orchestrator.js", [process.argv[2]]);
 });
