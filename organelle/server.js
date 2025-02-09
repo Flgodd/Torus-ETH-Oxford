@@ -1,40 +1,77 @@
-import { createLibp2p } from 'libp2p'
-import { createHelia } from 'helia'
-import { createOrbitDB } from '@orbitdb/core'
-import { LevelBlockstore } from 'blockstore-level'
-import { Libp2pOptions } from './config/libp2p.js'
-import { randomUUID } from 'crypto'
-import { multiaddr } from '@multiformats/multiaddr'
-import { IPFSAccessController } from '@orbitdb/core'
+import { teardownDB } from "./database.js";
+import { createData, readData, deleteData } from "./database.js";
 import express from 'express';
-
-if (typeof globalThis.CustomEvent === "undefined") {
-  globalThis.CustomEvent = class CustomEvent extends Event {
-      constructor(event, params = {}) {
-          super(event, params);
-          this.detail = params.detail || null;
-      }
-  };
-}
-
-global.CustomEvent = CustomEvent; // Make it available globally
+import dotenv from 'dotenv';
+dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT;
+const MAP_PORT = process.env.MAP_PORT;
+const BROKER_URL = `http://localhost:${BROKER_PORT}`; // Change if broker is on another machine
 
 app.use(express.json());
 
+// Dockers bridge network - accept requests from external connections
+app.listen(PORT, '0.0.0.0', async () => {
+    console.log(`Server is running at http://0.0.0.0:${PORT}/`);
+    await registerWithBroker();
+});
+
+// ✅ Root endpoint
 app.get('/', (req, res) => {
-  res.send(`Hello from DB service running on port ${PORT}`);
+    res.send(`Hello! Organelle running on port ${PORT}`);
 });
 
-app.get('/retrieve', (req, res) => {
-  const { key } = req.query;
-  res.send(`Hello from DB service running on port ${PORT}`);
+// ✅ Check organelle health
+app.get("/health", (req, res) => {
+    res.sendStatus(200); // Responds with 200 OK if alive
 });
 
-//dockers bridge network - accept requests from external connections
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server is running at http://0.0.0.0:${PORT}/`);
+// ✅ Retrieve data
+app.get("/read", async (req, res) => {
+    const {key} = req.params;
+    const value = await readData(key);
+    if (!value) return res.status(404).json({error: "Key not found"});
 });
 
+// ✅ Store data
+app.post("/create", async (req, res) => {
+    const { key, value } = req.body;
+    if (!key || !value) return res.status(400).json({ error: "Key and value required" });
+    await createData(key, value);
+    res.json({ success: true, message: "Data stored successfully" });
+});
+
+// ✅ Store data
+app.post("/update", async (req, res) => {
+    const { key, value } = req.body;
+    if (!key || !value) return res.status(400).json({ error: "Key and value required" });
+    await updateData(key, value);
+    res.json({ success: true, message: "Data updated successfully" });
+});
+
+// ✅ Remove data - NEEDS A SECOND LOOK
+app.delete("/delete", async (req, res) => {
+    const { key } = req.body;
+    await deleteData(key);
+    res.json({ success: true, message: "Data stored successfully" });
+});
+
+// Function to register with the broker
+async function registerWithBroker() {
+    try {
+        const serverAddress = `http://localhost:${MAP_PORT}`; // Use localhost for easier testing
+        await axios.post(`${BROKER_URL}/subscribe`, { serverAddress });
+        console.log(`[Node at http://localhost:${MAP_PORT}] Successfully registered with broker`);
+    } catch (error) {
+        console.error(`[Node at http://localhost:${MAP_PORT}] Failed to register with broker:`, error.message);
+    }
+}
+
+// Clean up when stopping this app using ctrl+c
+process.on('SIGINT', async () => {
+    // Close your db and stop OrbitDB and IPFS.
+    console.log("Closing db")
+    await teardownDB();
+    process.exit(0)
+})

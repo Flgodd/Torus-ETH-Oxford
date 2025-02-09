@@ -15,12 +15,11 @@ const nodeStore = {
     failures: {},
 };
 
-const broker = {
+const broker = { 
     store: [],
     QState: false,
 };
 
-// Request Queue
 const requestQueue = [];
 const MAX_QUEUE_SIZE = 500;  // Maximum queue size to avoid memory overload
 const PROCESSING_INTERVAL = 100; // Interval to process queued requests (ms)
@@ -32,7 +31,7 @@ function getNextNode() {
     return node;
 }
 
-// Subscribe endpoint
+// Subscribe endpoint 
 app.post("/subscribe", (req, res) => {
     try {
         const { serverAddress } = req.body;
@@ -76,23 +75,29 @@ async function processQueue(){
         return res.status(503).json({ msg: "No nodes available" });
     }
 
-    try {
-        const response = await axios.post(`http://${node}/handleRequest`, req.body);
+    try{
+        var response = null;
         
         if (operation === "READ" && data._id) {
+            response = await axios.post(`http://${node}/read`, req.body)
             cache.set(data._id, response.data);
         }
-        if (operation === "DELETE" && data._id) {
+        else if (operation === "DELETE" && data._id) {
             cache.cache.delete(data._id);
+            response = await axios.post(`http://${node}/delete`, req.body)
             console.log(`Cache entry removed for key: ${data._id}`);
         }
-        if ((operation === "CREATE" || operation === "UPDATE") && data._id) {
+        else if(operation === "CREATE"){
+            response = await axios.post(`http://${node}/create`, req.body)
+        }
+        else if (operation === "UPDATE" && data._id) {
             cache.set(data._id, data);
             console.log(`Cache updated for key: ${data._id}`);
+            response = await axios.post(`http://${node}/update`, req.body)
         }
 
         res.json(response.data);
-    } catch (error) {
+    }catch(error){
         console.error(`Error forwarding request to ${node}:`, error.message);
         res.status(500).json({ msg: `Failed to forward request to node ${node}` });
     }
