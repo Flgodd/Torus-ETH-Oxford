@@ -43,6 +43,7 @@ const initChild = spawn('docker', [
     '--ip', STATIC_ROOT_IP, // Set static IP
     '-e', `MAP_PORT=${MAP_PORT}`,
     '-e', `NUM_REPLICAS=${NUM_REPLICAS}`,
+    '-e', `NODE_NUMBER=${0}`,
     '--name', 'dbservice', 'dbservice'
 ]
 );

@@ -106,7 +106,7 @@ async function processQueue(){
             response = await axios.post(`http://${node}/create`, data);
         }
         else if (operation === "READ") {
-            response = await axios.get(`http://${node}/read`, { params: { key: data.key }});
+            response = await axios.post(`http://${node}/read`, { key: data.key });
             cache.set(data.key, response.data);
         }
         else if (operation === "UPDATE") {

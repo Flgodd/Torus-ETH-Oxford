@@ -108,12 +108,11 @@ async function readData(key, nodelistLength) {
         cache.prepare("INSERT OR REPLACE INTO cache (key, value, updated_at) VALUES (?, ?, ?)").run(key, JSON.stringify(finalVal), timestamp);
     }
 
-    for(let i = 1; i <= nodelistLength; i++){
+    for(let i = 0; i < nodelistLength; i++){
         if(NODE_NUMBER === i) continue;
-
+        const url = i === 0 ? 'http://dbservice:3000/addToCache' : `http://CHILDDB${i}:3000/addToCache`;
         try{
-            console.log("Forwarding request to child dbs")
-            await axios.post(`http://CHILDDB${i}:3000/addToCache`, { key: key, value: finalVal });
+            await axios.post(url, { key: key, value: finalVal, num: i });
         }catch(error){
             console.error(`Error reading from CHILDDB${i}:`, error.message);
         }
@@ -133,12 +132,12 @@ async function deleteData(key, nodeListLength) {
     cache.prepare("DELETE FROM cache WHERE key=?").run(key);
 
     // Broadcast delete to all replicas
-    for(let i = 1; i <= nodeListLength; i++){
+    for(let i = 0; i < nodeListLength; i++){
         if(NODE_NUMBER === i) continue;
+        const url = i === 0 ? 'http://dbservice:3000/removeFromCache' : `http://CHILDDB${i}:3000/removeFromCache`;
 
         try{
-            console.log('propogating delete across caches')
-            const resp = await axios.post(`http://CHILDDB${i}:3000/removeFromCache`, { key: key });
+            const resp = await axios.post(url, { key: key, num: i });
         }catch(error){
             console.error(`Error deleting from CHILDDB${i}:`, error.message);
         }

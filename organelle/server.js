@@ -34,12 +34,10 @@ async function pollNodeListLength() {
     }
 }
 
-setInterval(pollNodeListLength, 500000);
-
-
 // ✅ Read data
-app.get("/read", async (req, res) => {
-  const key = req.query.key;
+app.post("/read", async (req, res) => {
+    await pollNodeListLength();
+  const { key } = req.body;
   const value = await readData(key, nodeListLength);
   if (!value) return res.status(404).json({ error: "Key not found" });
   res.json({ success: true, message: "Data read successfully", key: key, data: value });
@@ -63,8 +61,8 @@ app.post("/update", async (req, res) => {
 
 // ✅ Remove data
 app.post("/delete", async (req, res) => {
+    pollNodeListLength();
     const { key } = req.body;
-    console.log("cunt; ", key)
     await deleteData(key, nodeListLength);
     res.json({ success: true, message: "Data deleted successfully", key: key });
 });
@@ -77,17 +75,17 @@ app.get("/health", (req, res) => {
 const cache = new Database("./cache.sqlite");
 
 app.post("/addToCache", (req, res) => {
-    const { key, value } = req.body
+    const { key, value, num } = req.body
     //check if the key is in the cache first, if so update timestamp
     const exists = cache.prepare("SELECT EXISTS (SELECT 1 FROM cache WHERE key = ?) AS key_exists").get(key);
 
     if(exists.key_exists) {
-        console.log("Cache item exists, resetting updated at ", exists)
+        console.log(`Cache item for ${num} exists, resetting updated at `, exists)
         //then update the timestamp of the cache item
         cache.prepare("UPDATE cache SET updated_at = ? WHERE key = ?").run(Math.floor(Date.now()/1000), key);
     }
     else {
-        console.log("Cache item being added")
+        console.log(`Cache item for ${num} being added`)
         //check cache is not full, if so delete oldest entry
         const cacheSize = cache.prepare("SELECT COUNT(*) FROM cache").get();
         if(cacheSize >= CACHE_MAX_SIZE){
@@ -105,8 +103,8 @@ app.post("/addToCache", (req, res) => {
 })
 
 app.post("/removeFromCache", (req, res) => {
-    const { key } = req.body;
-    // Remove from cache
+    const { key, num } = req.body;
+    console.log("Removing from cache for ", num)
     cache.prepare("DELETE FROM cache WHERE key = ?").run(key);
 
     res.json({ success: true, message: "Data removed successfully" });
@@ -124,6 +122,4 @@ process.on('SIGINT', async () => {
 app.listen(PORT, '0.0.0.0', async () => {
     console.log(`Server is running at http://0.0.0.0:${PORT}/`);
     await registerWithBroker();
-    setTimeout(() => 500);
-    await pollNodeListLength();
 });
