@@ -81,10 +81,10 @@ async function processQueue(){
     const { req, res } = requestQueue.shift();
     const { operation, data } = req.body;
 
-    if(operation === "READ" && data._id){
-        const cachedResponse = cache.get(data._id);
+    if(operation === "READ" && data.key){
+        const cachedResponse = cache.get(data.key);
         if(cachedResponse){
-            console.log(`Cache hit for key: ${data._id}`);
+            console.log(`Cache hit for key: ${data.key}`);
             return res.json({ fromCache: true, data: cachedResponse });
         }
     }
@@ -97,27 +97,30 @@ async function processQueue(){
     try{
         var response = null;
         console.log(`Forwarding request to node: ${node}`);
-        if (operation === "READ" && data._id) {
-            console.log('sexy body ben aam: ,', req.body)
-            response = await axios.get(`http://${node}/read`, req.param)
-            cache.set(data._id, response.data);
+        if (operation === "CREATE" && data.value){
+            console.log(data.value);
+            response = await axios.post(`http://${node}/create`, data.value);
         }
-        else if (operation === "DELETE" && data._id) {
-            cache.cache.delete(data._id);
-            response = await axios.post(`http://${node}/delete`, req.body)
-            console.log(`Cache entry removed for key: ${data._id}`);
+        else if (operation === "READ" && data.key) {
+            response = await axios.get(`http://${node}/read`, data.key);
+            cache.set(data.key, response.data);
         }
-        else if(operation === "CREATE"){
-            response = await axios.post(`http://${node}/create`, req.body)
+        else if (operation === "UPDATE" && data.key && data.value) {
+            response = await axios.post(`http://${node}/update`, data);
+            cache.set(data.key, data);
+            console.log(`Cache updated for key: ${data.key}`);
         }
-        else if (operation === "UPDATE" && data._id) {
-            cache.set(data._id, data);
-            console.log(`Cache updated for key: ${data._id}`);
-            response = await axios.post(`http://${node}/update`, req.body)
+        else if (operation === "DELETE" && data.key) {
+            response = await axios.post(`http://${node}/delete`, data.key);
+            cache.cache.delete(data.key);
+            console.log(`Cache entry removed for key: ${data.key}`);
         }
-
+        else {
+            console.error(`Unrecognised operation:`, operation);
+            response = 'ERROR'
+        }
         res.json(response.data);
-    }catch(error){
+    } catch (error) {
         console.error(`Error forwarding request to ${node}:`, error.message, response?.data);
         res.status(500).json({ msg: `Failed to forward request to node ${node}` });
     }
