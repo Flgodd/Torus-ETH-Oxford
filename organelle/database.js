@@ -26,7 +26,6 @@ export let db;
 const REPLICA = process.env.REPLICA || false;
 const DBADDR = process.env.DBADDR || null;
 const MULTIADDR = process.env.MULTIADDR || null;
-const CACHE_MAX_SIZE = 500;
 
 const blockstore = new LevelBlockstore(`./dbdata/${randDir}/ipfs/blocks`)
 const libp2p = await createLibp2p(Libp2pOptions)
@@ -36,11 +35,11 @@ async function setupDB() {
     ipfs = await createHelia({libp2p, blockstore})
     orbitdb = await createOrbitDB({ipfs, directory: `./dbdata/${randDir}/orbitdb`})
 
-    db = await orbitdb.open('my-db', {AccessController: IPFSAccessController({write: ['*']}), type: 'documents'})
+    db = await orbitdb.open('my-db', { AccessController: IPFSAccessController({write: ['*']}), type: 'keyvalue' })
 
     console.log('Database ready at:', db.address, orbitdb.ipfs.libp2p.getMultiaddrs()[0].toString())
     db.events.on('update', async (entry) => console.log('update from root: ', entry.payload.value))
-    await createData("FUCK YEAH ROOT")
+    await createData("LOG", "FUCK YEAH ROOT")
     let multiaddress = orbitdb.ipfs.libp2p.getMultiaddrs()[0].toString();
     //DO NOT REMOVE - sends data back to parent for parsing for replica nodes
     console.log(`{"dbaddr": "${db.address}", "multiaddress": "${multiaddress}"}`)
@@ -54,7 +53,7 @@ async function setupReplica() {
     await orbitdb.ipfs.libp2p.dial(multiaddr(MULTIADDR))
     console.log('opening db with ', DBADDR, ' dialling ', MULTIADDR)
     db = await orbitdb.open(DBADDR)
-    await createData("FUCK YEAH REPLICA")
+    await createData("LOG", "FUCK YEAH REPLICA")
 }
 
 if (REPLICA) {
@@ -86,38 +85,74 @@ cache.exec(`
 `);
 
 // ✅ Store data and broadcast updates
-async function createData(data) {
-    const key = randomUUID();
+async function createData(key, value) {
+    const hash = await db.put(key, value);
     const timestamp = Date.now();
-    await db.put({_id: key, value: data, timestamp: timestamp});
-    cache.prepare("INSERT OR REPLACE INTO cache (key, value, updated_at) VALUES (?, ?, ?)").run(key, JSON.stringify(data), timestamp);
-    return key
+    cache.prepare("INSERT OR REPLACE INTO cache (key, value, updated_at) VALUES (?, ?, ?)").run(key, JSON.stringify(value), timestamp);
+    return hash
 }
 
 // ✅ Retrieve data from SQLite or OrbitDB
-async function readData(key) {
-    // const row = cache.prepare("SELECT value FROM cache WHERE key = ?").get(key);
-    // if (row) return row.value;
+/* async function readData(key, nodelistLength) {
+    const row = cache.prepare("SELECT value FROM cache WHERE key = ?").get(key);
+    // update cache with current timestamp for this key
+    cache.prepare("UPDATE cache SET updated_at = ? WHERE key = ?").run(Date.now(), key);
+    
+    for(let i = 1; i <= nodelistLength; i++){
+        try{
+            console.log("Forwarding request to child dbs")
+            const response = await axios.post(`http://CHILDDB${i}/addToCache:3000`, { key: key, value: row.value });
+            if(response.data) return response.data;
+        }catch(error){
+            console.error(`Error reading from CHILDDB${i}:`, error.message);
+        }
+    }
+
+    if (row) return row.value;
 
     // If not in cache, fetch from OrbitDB
+
+    // const value = await db.get({ _id: key });
+    const value = await db.get(key);
+
     // const timestamp = Date.now();
-    const data = await db.get({_id: key});
-    return data;
-    // if (data) cache.prepare("INSERT OR REPLACE INTO cache (key, value, updated_at) VALUES (?, ?, ?)").run(key, JSON.stringify(data), timestamp);
-    // return data;
+    // if (readData) cache.prepare("INSERT OR REPLACE INTO cache (key, value, updated_at) VALUES (?, ?, ?)").run(key, JSON.stringify(readData), timestamp);
+    return value;
+} */
+
+// ✅ Retrieve data from SQLite or OrbitDB
+async function readData(key) {
+    const row = cache.prepare("SELECT value FROM cache WHERE key = ?").get(key);
+    if (row) return row.value;
+    // If not in cache, fetch from OrbitDB
+
+    // const value = await db.get({ _id: key });
+    const value = await db.get(key);
+
+    // const timestamp = Date.now();
+    // if (readData) cache.prepare("INSERT OR REPLACE INTO cache (key, value, updated_at) VALUES (?, ?, ?)").run(key, JSON.stringify(readData), timestamp);
+    return value;
 }
 
 // ✅ Store data and broadcast updates
 async function updateData(key, data) {
-    const timestamp = Date.now();
-    await db.put({_id: key, value: data, timestamp: timestamp})
-    cache.prepare("INSERT OR REPLACE INTO cache (key, value, updated_at) VALUES (?, ?, ?)").run(key, JSON.stringify(data), timestamp);
+    await db.put(key, data)
     return data;
 }
 
 async function deleteData(key) {
-    await db.del({_id: key})
+    await db.del(key)
+    console.log("cuntcunt: ", key)
     cache.prepare("DELETE FROM cache WHERE key=?").run(key);
+
+    // Broadcast delete to all replicas
+    for(let i = 1; i <= nodelistLength; i++){
+        try{
+            await axios.post(`http://CHILDDB${i}/removeFromCache:3000`, { key: key });
+        }catch(error){
+            console.error(`Error deleting from CHILDDB${i}:`, error.message);
+        }
+    }
     return key
 }
 

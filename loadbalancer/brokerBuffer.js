@@ -1,6 +1,7 @@
 import express from "express";
 import axios from "axios";
 import { LRUCache } from "./LRUcache.js";
+import { fork } from "child_process";
 
 const app = express();
 const port = 8030;
@@ -75,54 +76,60 @@ app.post("/query", authenticateToken, async (req, res) => {
     requestQueue.push(request);
 });
 
+app.get("/nodelistLength", authenticateToken, async (req, res) => {
+    return nodeStore.nodes.length;
+});
+
 async function processQueue(){
     if(requestQueue.length === 0) return;
 
     const { req, res } = requestQueue.shift();
     const { operation, data } = req.body;
 
-    if(operation === "READ" && data._id){
-        const cachedResponse = cache.get(data._id);
+    if (operation === "READ" && data.key){
+        const cachedResponse = cache.get(data.key);
         if(cachedResponse){
-            console.log(`Cache hit for key: ${data._id}`);
+            console.log(`Cache hit for key: ${data.key}`);
             return res.json({ fromCache: true, data: cachedResponse });
         }
     }
 
     const node = getNextNode();
     if(!node){
-        return res.status(503).json({ msg: "No nodes available" });
+        return res.status(503).json({ message: "No nodes available" });
     }
 
     try{
         var response = null;
         console.log(`Forwarding request to node: ${node}`);
-        if (operation === "READ" && data._id) {
-            console.log('sexy body ben aam: ,', req.body)
-            response = await axios.get(`http://${node}/read`, req.param)
-            cache.set(data._id, response.data);
+        if (operation === "CREATE" && data.key && data.value){
+            response = await axios.post(`http://${node}/create`, data);
         }
-        else if (operation === "DELETE" && data._id) {
-            cache.cache.delete(data._id);
-            response = await axios.post(`http://${node}/delete`, req.body)
-            console.log(`Cache entry removed for key: ${data._id}`);
+        else if (operation === "READ") {
+            response = await axios.get(`http://${node}/read`, { params: { key: data.key }});
+            cache.set(data.key, response.data);
         }
-        else if(operation === "CREATE"){
-            response = await axios.post(`http://${node}/create`, req.body)
+        else if (operation === "UPDATE") {
+            response = await axios.post(`http://${node}/update`, data);
+            cache.set(data.key, data);
+            console.log(`Cache updated for key: ${data.key}`);
         }
-        else if (operation === "UPDATE" && data._id) {
-            cache.set(data._id, data);
-            console.log(`Cache updated for key: ${data._id}`);
-            response = await axios.post(`http://${node}/update`, req.body)
+        else if (operation === "DELETE") {
+            console.log("cuntuntuntuntunttu: ", data.key)
+            response = await axios.post(`http://${node}/delete`, data);
+            cache.cache.delete(data.key);
+            console.log(`Cache entry removed for key: ${data.key}`);
         }
-
+        else {
+            console.error(`Unrecognised operation:`, operation);
+            response = 'ERROR'
+        }
         res.json(response.data);
-    }catch(error){
-        console.error(`Error forwarding request to ${node}:`, error.message, response?.data);
+    } catch (error) {
+        console.error(`Error forwarding request to ${node}:`, error.message, response);
         res.status(500).json({ msg: `Failed to forward request to node ${node}` });
     }
 }
-
 
 setInterval(processQueue, PROCESSING_INTERVAL);
 
@@ -153,4 +160,6 @@ app.get("/qstatus", (req, res) => {
 
 app.listen(port, () => {
     console.log(`Broker listening on port ${port}`);
+    console.log("Starting organelles....");
+    fork("./orchestrator.js", [process.argv[2]]);
 });
