@@ -115,6 +115,10 @@ async function readData(key, nodelistLength) {
     const data = await db.get({_id: key});
     if (data) cache.prepare("INSERT OR REPLACE INTO cache (key, value, updated_at) VALUES (?, ?, ?)").run(key, JSON.stringify(data), timestamp);
     return data;
+    const timestamp = Date.now();
+    const readData = await db.get({_id: key});
+    if (readData) cache.prepare("INSERT OR REPLACE INTO cache (key, value, updated_at) VALUES (?, ?, ?)").run(key, JSON.stringify(readData), timestamp);
+    return readData;
 }
 
 // ✅ Store data and broadcast updates
