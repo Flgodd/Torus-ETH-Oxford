@@ -96,14 +96,14 @@ async function createData(data) {
 
 // ✅ Retrieve data from SQLite or OrbitDB
 async function readData(key) {
-    const row = cache.prepare("SELECT value FROM cache WHERE key = ?").get(key);
-    if (row) return row.value;
-
+    console.log('DATABASE');
+    // const row = cache.prepare("SELECT value FROM cache WHERE key = ?").get(key);
+    // if (row) return row.value;
     // If not in cache, fetch from OrbitDB
-    const timestamp = Date.now();
-    const readData = await db.get({_id: key});
-    if (readData) cache.prepare("INSERT OR REPLACE INTO cache (key, value, updated_at) VALUES (?, ?, ?)").run(key, JSON.stringify(readData), timestamp);
-    return readData;
+    // const timestamp = Date.now();
+    const value = await db.get({_id: key});
+    // if (readData) cache.prepare("INSERT OR REPLACE INTO cache (key, value, updated_at) VALUES (?, ?, ?)").run(key, JSON.stringify(readData), timestamp);
+    return value;
 }
 
 // ✅ Store data and broadcast updates

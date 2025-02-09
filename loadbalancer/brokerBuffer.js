@@ -81,7 +81,7 @@ async function processQueue(){
     const { req, res } = requestQueue.shift();
     const { operation, data } = req.body;
 
-    if(operation === "READ" && data.key){
+    if (operation === "READ" && data.key){
         const cachedResponse = cache.get(data.key);
         if(cachedResponse){
             console.log(`Cache hit for key: ${data.key}`);
@@ -91,19 +91,19 @@ async function processQueue(){
 
     const node = getNextNode();
     if(!node){
-        return res.status(503).json({ msg: "No nodes available" });
+        return res.status(503).json({ message: "No nodes available" });
     }
 
     try{
         var response = null;
         console.log(`Forwarding request to node: ${node}`);
         if (operation === "CREATE" && data.value){
-            console.log(data.value);
             response = await axios.post(`http://${node}/create`, data.value);
         }
         else if (operation === "READ" && data.key) {
+            console.log('BROKER BUFFER');
             response = await axios.get(`http://${node}/read`, data.key);
-            cache.set(data.key, response.data);
+            // cache.set(data.key, response.data);
         }
         else if (operation === "UPDATE" && data.key && data.value) {
             response = await axios.post(`http://${node}/update`, data);
