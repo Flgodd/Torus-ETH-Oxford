@@ -46,7 +46,7 @@ app.post("/update", async (req, res) => {
 
 // ✅ Remove data
 app.delete("/delete", async (req, res) => {
-    const key = req.body;
+    const key = req.query.key;
     await deleteData(key);
     res.json({ success: true, message: "Data deleted successfully", key: key });
 });

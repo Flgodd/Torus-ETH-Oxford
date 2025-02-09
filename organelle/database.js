@@ -90,35 +90,32 @@ async function createData(key, value) {
     const hash = await db.put(key, value);
     const timestamp = Date.now();
     cache.prepare("INSERT OR REPLACE INTO cache (key, value, updated_at) VALUES (?, ?, ?)").run(key, JSON.stringify(value), timestamp);
+    console.log(await db.all())
     return hash
 }
 
 // ✅ Retrieve data from SQLite or OrbitDB
 async function readData(key) {
     const row = cache.prepare("SELECT value FROM cache WHERE key = ?").get(key);
-    if (row) return row.value;
-    // If not in cache, fetch from OrbitDB
-
-    // const value = await db.get({ _id: key });
+    if (row) {
+        console.log('READING FROM CACHE', row.value)
+        return row.value;
+    }
     const value = await db.get(key);
-    const all = await db.all();
-
-    // const timestamp = Date.now();
-    // if (readData) cache.prepare("INSERT OR REPLACE INTO cache (key, value, updated_at) VALUES (?, ?, ?)").run(key, JSON.stringify(readData), timestamp);
+    const timestamp = Date.now();
+    if (readData) cache.prepare("INSERT OR REPLACE INTO cache (key, value, updated_at) VALUES (?, ?, ?)").run(key, JSON.stringify(readData), timestamp);
     return value;
 }
 
 // ✅ Store data and broadcast updates
-async function updateData(key, data) {
-    const timestamp = Date.now();
-    await db.put({_id: key, value: data, timestamp: timestamp})
-    cache.prepare("INSERT OR REPLACE INTO cache (key, value, updated_at) VALUES (?, ?, ?)").run(key, JSON.stringify(data), timestamp);
-    return data;
+async function updateData(key, value) {
+    return createData(key, value)
 }
 
 async function deleteData(key) {
-    await db.del({_id: key})
-    cache.prepare("DELETE FROM cache WHERE key=?").run(key);
+    await db.del(key)
+    // cache.prepare("DELETE FROM cache WHERE key=?").run(key);
+    console.log(await db.all())
     return key
 }
 
