@@ -1,6 +1,8 @@
 // @ts-check
 import { spawn } from "child_process";
 import { execSync } from "child_process";
+import dotenv from 'dotenv';
+dotenv.config();
 
 let children = [];
 const MAP_PORT = 3001;
