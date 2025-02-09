@@ -40,7 +40,6 @@ const initChild = spawn('docker', [
     '-p', `${MAP_PORT}:${process.env.PORT}`,//map to port 3000 which we hardcode below as the port to listen on inside of the container
     '--network', NETWORK_NAME,
     '--ip', STATIC_ROOT_IP, // Set static IP
-    '-env-file', '.env',
     '-e', `MAP_PORT=${MAP_PORT}`,
     '-e', `NUM_REPLICAS=${NUM_REPLICAS}`,
     '--name', 'dbservice', 'dbservice'
@@ -71,7 +70,6 @@ initChild.stdout.on('data', (data) => {
                 'run', '--rm',
                 '--network', NETWORK_NAME,
                 '-p', `${MAP_PORT+i}:${process.env.PORT}`,//map to port 3000 which we hardcode below
-                '-env-file', '.env',
                 '-e', `MAP_PORT=${MAP_PORT+i}`,
                 '-e', `REPLICA=yes`,
                 '-e', `DBADDR=${dbaddr}`,

@@ -6,8 +6,17 @@ import { Libp2pOptions } from './config/libp2p.js'
 import { randomUUID } from 'crypto'
 import { multiaddr } from '@multiformats/multiaddr'
 import Database from "better-sqlite3";
-import dotenv from 'dotenv';
-dotenv.config();
+
+if (typeof globalThis.CustomEvent === "undefined") {
+    globalThis.CustomEvent = class CustomEvent extends Event {
+        constructor(event, params = {}) {
+            super(event, params);
+            this.detail = params.detail || null;
+        }
+    };
+  }
+  
+  global.CustomEvent = CustomEvent; // Make it available globally
 
 let ipfs;
 let orbitdb;
