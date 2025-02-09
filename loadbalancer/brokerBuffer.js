@@ -75,6 +75,10 @@ app.post("/query", authenticateToken, async (req, res) => {
     requestQueue.push(request);
 });
 
+app.get("/nodelistLength", authenticateToken, async (req, res) => {
+    return nodeStore.nodes.length;
+});
+
 async function processQueue(){
     if(requestQueue.length === 0) return;
 
@@ -99,7 +103,7 @@ async function processQueue(){
         console.log(`Forwarding request to node: ${node}`);
         if (operation === "READ" && data._id) {
             console.log('sexy body ben aam: ,', req.body)
-            response = await axios.get(`http://${node}/read`, req.param)
+            response = await axios.get(`http://${node}/read`, req.body)
             cache.set(data._id, response.data);
         }
         else if (operation === "DELETE" && data._id) {

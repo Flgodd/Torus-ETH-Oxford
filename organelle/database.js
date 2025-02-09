@@ -26,7 +26,6 @@ export let db;
 const REPLICA = process.env.REPLICA || false;
 const DBADDR = process.env.DBADDR || null;
 const MULTIADDR = process.env.MULTIADDR || null;
-const CACHE_MAX_SIZE = 500;
 
 const blockstore = new LevelBlockstore(`./dbdata/${randDir}/ipfs/blocks`)
 const libp2p = await createLibp2p(Libp2pOptions)
@@ -90,34 +89,53 @@ async function createData(data) {
     const key = randomUUID();
     const timestamp = Date.now();
     await db.put({_id: key, value: data, timestamp: timestamp});
-    cache.prepare("INSERT OR REPLACE INTO cache (key, value, updated_at) VALUES (?, ?, ?)").run(key, JSON.stringify(data), timestamp);
     return key
 }
 
 // ✅ Retrieve data from SQLite or OrbitDB
-async function readData(key) {
-    // const row = cache.prepare("SELECT value FROM cache WHERE key = ?").get(key);
-    // if (row) return row.value;
+async function readData(key, nodelistLength) {
+    const row = cache.prepare("SELECT value FROM cache WHERE key = ?").get(key);
+    // update cache with current timestamp for this key
+    cache.prepare("UPDATE cache SET updated_at = ? WHERE key = ?").run(Date.now(), key);
+    
+    for(let i = 1; i <= nodelistLength; i++){
+        try{
+            console.log("Forwarding request to child dbs")
+            const response = await axios.post(`http://CHILDDB${i}/addToCache:3000`, { key: key, value: row.value });
+            if(response.data) return response.data;
+        }catch(error){
+            console.error(`Error reading from CHILDDB${i}:`, error.message);
+        }
+    }
+
+    if (row) return row.value;
 
     // If not in cache, fetch from OrbitDB
-    // const timestamp = Date.now();
+    const timestamp = Date.now();
     const data = await db.get({_id: key});
+    if (data) cache.prepare("INSERT OR REPLACE INTO cache (key, value, updated_at) VALUES (?, ?, ?)").run(key, JSON.stringify(data), timestamp);
     return data;
-    // if (data) cache.prepare("INSERT OR REPLACE INTO cache (key, value, updated_at) VALUES (?, ?, ?)").run(key, JSON.stringify(data), timestamp);
-    // return data;
 }
 
 // ✅ Store data and broadcast updates
 async function updateData(key, data) {
     const timestamp = Date.now();
     await db.put({_id: key, value: data, timestamp: timestamp})
-    cache.prepare("INSERT OR REPLACE INTO cache (key, value, updated_at) VALUES (?, ?, ?)").run(key, JSON.stringify(data), timestamp);
     return data;
 }
 
 async function deleteData(key) {
     await db.del({_id: key})
     cache.prepare("DELETE FROM cache WHERE key=?").run(key);
+
+    // Broadcast delete to all replicas
+    for(let i = 1; i <= nodelistLength; i++){
+        try{
+            await axios.post(`http://CHILDDB${i}/removeFromCache:3000`, { key: key });
+        }catch(error){
+            console.error(`Error deleting from CHILDDB${i}:`, error.message);
+        }
+    }
     return key
 }
 
