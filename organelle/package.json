@@ -19,7 +19,10 @@
   },
   "dependencies": {
     "@chainsafe/libp2p-gossipsub": "^14.1.0",
+    "@multiformats/multiaddr": "^12.3.5",
     "@orbitdb/core": "^2.4.3",
+    "axios": "^1.7.9",
+    "better-sqlite3": "^11.8.1",
     "blockstore-level": "^2.0.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
@@ -27,6 +30,7 @@
     "event-target-shim": "^6.0.2",
     "express": "^4.21.2",
     "helia": "^5.2.0",
-    "jsonwebtoken": "^9.0.2"
+    "jsonwebtoken": "^9.0.2",
+    "libp2p": "^2.5.2"
   }
 }

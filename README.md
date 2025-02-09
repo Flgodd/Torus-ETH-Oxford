@@ -1,4 +1,22 @@
+<img src="static/output-2.jpg" alt="DMO Logo" width="70"/>
+
+# DeMemoir - A Decentralised Memory Organ (DMO)
+
+>DeMemoir™, a **Decentralised Memory Organ (DMO)**  is a robust, high-throughput, decentralized memory retrieval and storage system. A crucial part of the Torus Agent Swarm, DeMemoir serves as a **tamper-proof** data store **without a single point of failure**. DeMemoir's archietecture ensures that data is always accessible, even if some nodes are offline and is designed to concurrently handle a large number of concurrent read and write requests.
+
+
+
+
+---
+
 # Getting Started
+
+## Requirements
+
+- Docker
+- Node
+
+## Quick Start
 
 To run Decentralised Memory Organ
 ```
@@ -8,7 +26,7 @@ npm run start
 
 ---
 
-# **Decentralised Memory Organ (DMO) – Technical Specification**
+# **Technical Specification**
 
 ## **1. Introduction**
 The **Decentralised Memory Organ (DMO)** is a distributed, fault-tolerant data storage and retrieval system designed to function as a **peer-to-peer knowledge repository**. It leverages **OrbitDB** for decentralised, IPFS-backed storage, **SQLite** for low-latency local caching, and **Torus network authentication** to regulate access and permissions.
@@ -22,6 +40,13 @@ This system is designed to be:
 ---
 
 ## **2. System Architecture**
+
+<p align="center">
+
+<img src="static/torusdememolight.svg" alt="DMO Logo" width="600"/>
+
+</p>
+
 The DMO consists of **three primary layers**:
 
 1. **Storage Layer** – Handles decentralised storage using **OrbitDB over IPFS**, with **SQLite caching** for low-latency reads.
