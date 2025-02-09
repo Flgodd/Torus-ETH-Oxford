@@ -5,14 +5,14 @@ import { createData, readData, updateData, deleteData, teardownDB } from "./data
 const app = express();
 const PORT = 3000;
 const MAP_PORT = process.env.MAP_PORT;
-const BROKER_URL = `http://localhost:8030`; // Change if broker is on another machine
+const BROKER_URL = "http://host.docker.internal:8030"; // Change if broker is on another machine
 
 app.use(express.json());
 
 // Function to register with the broker
 async function registerWithBroker() {
     try {
-        const serverAddress = `http://localhost:${MAP_PORT}`; // Use localhost for easier testing
+        const serverAddress = `localhost:${MAP_PORT}`; // Use localhost for easier testing
         await axios.post(`${BROKER_URL}/subscribe`, { serverAddress });
         console.log(`[Node at http://localhost:${MAP_PORT}] Successfully registered with broker`);
     } catch (error) {
