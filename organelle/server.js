@@ -76,14 +76,6 @@ app.post("/delete", async (req, res) => {
     res.json({ success: true, message: "Data deleted successfully", key: key });
 });
 
-// IGNORE WILL REMOVE
-// // ✅ Remove data
-// app.delete("/delete", async (req, res) => {
-//     const key = req.query.key;
-//     await deleteData(key);
-//     res.json({ success: true, message: "Data deleted successfully", key: key });
-// });
-
 // ✅ Check organelle health
 app.get("/health", (req, res) => {
     res.sendStatus(200); // Responds with 200 OK if alive

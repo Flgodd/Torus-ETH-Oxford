@@ -5,8 +5,6 @@
 >Porous Torus™, a **Decentralised Memory Organ (DMO)**  is a robust, high-throughput, decentralized memory retrieval and storage system. A crucial part of the Torus Agent Swarm, DeMemoir serves as a **tamper-proof** data store **without a single point of failure**. DeMemoir's archietecture ensures that data is always accessible, even if some nodes are offline and is designed to concurrently handle a large number of concurrent read and write requests.
 
 
-
-
 ---
 
 # Getting Started
@@ -40,6 +38,17 @@ Connect your wallet via the *index.html* to get authorisation to make requests.
 
 Make requests to http://localhost:3000/ with your Authorization Header. 
 
+---
+
+## Core Components
+- Distributed SQLite cache on Each Organelle (eventually-consistent)
+- WalletId authentication generates a `sessionToken` which is required to communicate with the memory organ load balancer
+- Isolated Dockererised 'Organelles each running their own OrbitDB instance
+	- Each organelle has its own SQLite database which it uses to cache
+- Buffered Load Balancer with an in-memory LRU Cache (very fast)
+	- Load balancer intelligently routes requests from authenticated agents by checking the health of individual organelles
+	- Load balancer buffer enques requests from agents for more secure request processing
+	- In-memory LRU cache is an extremely fast and small cache for immediate lookups at the load balancer level
 
 ---
 
