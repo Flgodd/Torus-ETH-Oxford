@@ -1,27 +1,13 @@
 import { createLibp2p } from 'libp2p'
 import { createHelia } from 'helia'
-import { createOrbitDB } from '@orbitdb/core'
+import { createOrbitDB, IPFSAccessController } from '@orbitdb/core'
 import { LevelBlockstore } from 'blockstore-level'
 import { Libp2pOptions } from './config/libp2p.js'
 import { randomUUID } from 'crypto'
 import { multiaddr } from '@multiformats/multiaddr'
-import { IPFSAccessController } from '@orbitdb/core'
 import Database from "better-sqlite3";
-
 import dotenv from 'dotenv';
 dotenv.config();
-
-//i dont know why we need this at all
-if (typeof globalThis.CustomEvent === "undefined") {
-    globalThis.CustomEvent = class CustomEvent extends Event {
-        constructor(event, params = {}) {
-            super(event, params);
-            this.detail = params.detail || null;
-        }
-    };
-  }
-
-global.CustomEvent = CustomEvent; // Make it available globally
 
 let ipfs;
 let orbitdb;
@@ -62,7 +48,7 @@ async function setupReplica() {
   await upsertData("FUCK YEAH REPLICA")
 }
 
-if(REPLICA) {
+if (REPLICA) {
   console.log('setting up replica')
   setupReplica().catch(console.error)
 } else {
@@ -96,7 +82,7 @@ cache.exec(`
 `);
 
 // ✅ Store data and broadcast updates
-async function upsertData(key = randomUUID(),data) {
+async function upsertData(key = randomUUID(), data) {
   const timestamp = Date.now();
   await db.put({ _id: key, value: data, timestamp: timestamp })
   cache.prepare("INSERT OR REPLACE INTO cache (key, value, updated_at) VALUES (?, ?, ?)").run(key, data, timestamp);
@@ -120,5 +106,4 @@ async function deleteData(key) {
   return key
 }
 
-export { setupDB, teardownDB };
-export { readData, upsertData, deleteData };
+export { setupDB, teardownDB, readData, upsertData, deleteData };
