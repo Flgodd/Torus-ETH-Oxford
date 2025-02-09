@@ -123,7 +123,8 @@ async function signMessage() {
 
         if (verifyResult.success) {
             localStorage.setItem("authToken", verifyResult.token);
-            statusMessage.textContent = "✅ Authentication successful!";
+            statusMessage.textContent = `✅ Authentication successful for wallet address: ${walletAddress}`;
+
             statusMessage.style.color = "green";
         } else {
             statusMessage.textContent = "❌ Authentication failed!";
