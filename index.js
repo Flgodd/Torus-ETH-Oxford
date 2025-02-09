@@ -4,7 +4,7 @@ import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
 import { Keyring } from "@polkadot/keyring";
-import { cryptoWaitReady, signatureVerify } from "@polkadot/util-crypto";
+import { cryptoWaitReady, signatureVerify, isAddress } from "@polkadot/util-crypto";
 import { hexToU8a, stringToU8a } from "@polkadot/util";
 import jwt from "jsonwebtoken";
 
@@ -33,10 +33,21 @@ app.get("/", (req, res) => {
 // Validate wallet adress
 app.post("/validate-wallet", async (req, res) => {
   const { walletAddress } = req.body;
-  // if (!walletAddress || !walletAddress.startsWith("0x")) {
-  //     return res.json({ valid: false });
-  // }
+
+  try {
+    isvalid = isAddress(walletAddress);
+    if (!isvalid) {
+      return res.json({ valid: false, message: "Invalid Polkadot address" });
+    }
+  
+ 
   res.json({ valid: true });
+  }
+  catch (error) {
+    console.error("🚨 Address Validation Error:", error.message);
+    res.json({ valid: false, message: "Invalid address format" });
+}
+
 });
 
 // ✅ Generate Authentication Challenge
@@ -81,7 +92,6 @@ app.post("/verify-signature", async (req, res) => {
       res.status(500).json({ error: "Verification error", details: error.message });
   }
 });
-
 
 
 // Start the server
