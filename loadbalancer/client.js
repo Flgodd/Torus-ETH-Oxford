@@ -1,6 +1,8 @@
 import axios from "axios";
+import dotenv from 'dotenv';
+dotenv.config();
 
-const BROKER_URL = "http://localhost:8030";
+const BROKER_URL = `http://localhost:${process.env.BROKER_PORT}`;
 
 // Function to send a request through the broker
 async function sendRequest(payload) {

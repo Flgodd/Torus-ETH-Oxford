@@ -1,11 +1,27 @@
 import { createLibp2p } from 'libp2p'
 import { createHelia } from 'helia'
-import { createOrbitDB, IPFSAccessController } from '@orbitdb/core'
+import { createOrbitDB } from '@orbitdb/core'
 import { LevelBlockstore } from 'blockstore-level'
 import { Libp2pOptions } from './config/libp2p.js'
 import { randomUUID } from 'crypto'
 import { multiaddr } from '@multiformats/multiaddr'
+import { IPFSAccessController } from '@orbitdb/core'
 import Database from "better-sqlite3";
+
+import dotenv from 'dotenv';
+dotenv.config();
+
+//i dont know why we need this at all
+if (typeof globalThis.CustomEvent === "undefined") {
+    globalThis.CustomEvent = class CustomEvent extends Event {
+        constructor(event, params = {}) {
+            super(event, params);
+            this.detail = params.detail || null;
+        }
+    };
+  }
+
+global.CustomEvent = CustomEvent; // Make it available globally
 
 let ipfs;
 let orbitdb;
@@ -17,10 +33,11 @@ const DBADDR = process.env.DBADDR || null;
 const MULTIADDR = process.env.MULTIADDR || null;
 const CACHE_MAX_SIZE = 500;
 
+const blockstore = new LevelBlockstore(`./dbdata/${randDir}/ipfs/blocks`)
+const libp2p = await createLibp2p(Libp2pOptions)
+
 // Set up initial root DB
 async function setupDB() {
-  const blockstore = new LevelBlockstore(`./dbdata/${randDir}/ipfs/blocks`)
-  const libp2p = await createLibp2p(Libp2pOptions)
   ipfs = await createHelia({ libp2p, blockstore })
   orbitdb = await createOrbitDB({ ipfs, directory: `./dbdata/${randDir}/orbitdb` })
   
@@ -36,8 +53,6 @@ async function setupDB() {
 
 // Replicate children
 async function setupReplica() {
-  const blockstore = new LevelBlockstore(`./dbdata/${randDir}/ipfs/blocks`)
-  const libp2p = await createLibp2p(Libp2pOptions)
   ipfs = await createHelia({ libp2p, blockstore })
   orbitdb = await createOrbitDB({ ipfs, directory: `./dbdata/${randDir}/orbitdb` })
   // dial into known stable node (root)
@@ -48,7 +63,7 @@ async function setupReplica() {
 }
 
 if(REPLICA) {
-  console.log('ssetting up replic')
+  console.log('setting up replica')
   setupReplica().catch(console.error)
 } else {
   console.log('setting up root db')
