@@ -76,6 +76,7 @@ initChild.stdout.on('data', (data) => {
                 '-e', `REPLICA=yes`,
                 '-e', `DBADDR=${dbaddr}`,
                 '-e', `MULTIADDR=${multiaddress}`,
+                '-e', `NODE_NUMBER=${i}`,
                 '--name', `CHILDDB${i}`, 'dbservice'
             ],{
                 stdio: 'inherit' // This makes stdout and stderr go straight to the terminal

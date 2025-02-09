@@ -76,8 +76,8 @@ app.post("/query", authenticateToken, async (req, res) => {
     requestQueue.push(request);
 });
 
-app.get("/nodelistLength", authenticateToken, async (req, res) => {
-    return nodeStore.nodes.length;
+app.get("/nodelistLength", async (req, res) => {
+    return res.json({length: nodeStore.nodes.length});
 });
 
 async function processQueue(){
@@ -158,7 +158,7 @@ app.get("/qstatus", (req, res) => {
     res.json({ status: broker.QState });
 });
 
-app.listen(port, () => {
+app.listen(port, '0.0.0.0', () => {
     console.log(`Broker listening on port ${port}`);
     console.log("Starting organelles....");
     fork("./orchestrator.js", [process.argv[2]]);

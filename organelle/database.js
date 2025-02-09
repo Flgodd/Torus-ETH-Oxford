@@ -6,6 +6,7 @@ import {Libp2pOptions} from './config/libp2p.js'
 import {randomUUID} from 'crypto'
 import {multiaddr} from '@multiformats/multiaddr'
 import Database from "better-sqlite3";
+import axios from 'axios'
 
 if (typeof globalThis.CustomEvent === "undefined") {
     globalThis.CustomEvent = class CustomEvent extends Event {
@@ -26,6 +27,7 @@ export let db;
 const REPLICA = process.env.REPLICA || false;
 const DBADDR = process.env.DBADDR || null;
 const MULTIADDR = process.env.MULTIADDR || null;
+const NODE_NUMBER = process.env.NODE_NUMBER || null;
 
 const blockstore = new LevelBlockstore(`./dbdata/${randDir}/ipfs/blocks`)
 const libp2p = await createLibp2p(Libp2pOptions)
@@ -80,58 +82,44 @@ cache.exec(`
     CREATE TABLE IF NOT EXISTS cache (
          key TEXT PRIMARY KEY,
          value TEXT,
-         updated_at INTEGER DEFAULT (strftime('%s', 'now') * 1000)
+         updated_at INTEGER
     );
 `);
 
 // ✅ Store data and broadcast updates
 async function createData(key, value) {
-    const hash = await db.put(key, value);
-    const timestamp = Date.now();
-    cache.prepare("INSERT OR REPLACE INTO cache (key, value, updated_at) VALUES (?, ?, ?)").run(key, JSON.stringify(value), timestamp);
-    return hash
+    await db.put(key, value);
+    return key
 }
 
 // ✅ Retrieve data from SQLite or OrbitDB
-/* async function readData(key, nodelistLength) {
+async function readData(key, nodelistLength) {
+    let finalVal
     const row = cache.prepare("SELECT value FROM cache WHERE key = ?").get(key);
-    // update cache with current timestamp for this key
-    cache.prepare("UPDATE cache SET updated_at = ? WHERE key = ?").run(Date.now(), key);
-    
+
+    if (row) {
+        // update cache with current timestamp for this key
+        cache.prepare("UPDATE cache SET updated_at = ? WHERE key = ?").run(Math.floor(Math.floor(Date.now()/1000)/1000), key);
+        finalVal = row.value;
+    } 
+    {    
+        const timestamp = Math.floor(Date.now()/1000);
+        finalVal = await db.get(key);
+        cache.prepare("INSERT OR REPLACE INTO cache (key, value, updated_at) VALUES (?, ?, ?)").run(key, JSON.stringify(finalVal), timestamp);
+    }
+
     for(let i = 1; i <= nodelistLength; i++){
+        if(NODE_NUMBER === i) continue;
+
         try{
             console.log("Forwarding request to child dbs")
-            const response = await axios.post(`http://CHILDDB${i}/addToCache:3000`, { key: key, value: row.value });
-            if(response.data) return response.data;
+            await axios.post(`http://CHILDDB${i}:3000/addToCache`, { key: key, value: finalVal });
         }catch(error){
             console.error(`Error reading from CHILDDB${i}:`, error.message);
         }
     }
 
-    if (row) return row.value;
-
-    // If not in cache, fetch from OrbitDB
-
-    // const value = await db.get({ _id: key });
-    const value = await db.get(key);
-
-    // const timestamp = Date.now();
-    // if (readData) cache.prepare("INSERT OR REPLACE INTO cache (key, value, updated_at) VALUES (?, ?, ?)").run(key, JSON.stringify(readData), timestamp);
-    return value;
-} */
-
-// ✅ Retrieve data from SQLite or OrbitDB
-async function readData(key) {
-    const row = cache.prepare("SELECT value FROM cache WHERE key = ?").get(key);
-    if (row) return row.value;
-    // If not in cache, fetch from OrbitDB
-
-    // const value = await db.get({ _id: key });
-    const value = await db.get(key);
-
-    // const timestamp = Date.now();
-    // if (readData) cache.prepare("INSERT OR REPLACE INTO cache (key, value, updated_at) VALUES (?, ?, ?)").run(key, JSON.stringify(readData), timestamp);
-    return value;
+    return finalVal;
 }
 
 // ✅ Store data and broadcast updates
@@ -140,15 +128,17 @@ async function updateData(key, data) {
     return data;
 }
 
-async function deleteData(key) {
+async function deleteData(key, nodeListLength) {
     await db.del(key)
-    console.log("cuntcunt: ", key)
     cache.prepare("DELETE FROM cache WHERE key=?").run(key);
 
     // Broadcast delete to all replicas
-    for(let i = 1; i <= nodelistLength; i++){
+    for(let i = 1; i <= nodeListLength; i++){
+        if(NODE_NUMBER === i) continue;
+
         try{
-            await axios.post(`http://CHILDDB${i}/removeFromCache:3000`, { key: key });
+            console.log('propogating delete across caches')
+            const resp = await axios.post(`http://CHILDDB${i}:3000/removeFromCache`, { key: key });
         }catch(error){
             console.error(`Error deleting from CHILDDB${i}:`, error.message);
         }

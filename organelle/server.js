@@ -8,6 +8,7 @@ const PORT = 3000;
 const MAP_PORT = process.env.MAP_PORT;
 const BROKER_URL = "http://host.docker.internal:8030"; // Change if broker is on another machine
 const CACHE_MAX_SIZE = 500;
+let nodeListLength = 0;
 
 app.use(express.json());
 
@@ -22,11 +23,24 @@ async function registerWithBroker() {
     }
 }
 
+async function pollNodeListLength() {
+    try {
+        const response = await axios.get(`${BROKER_URL}/nodelistLength`);
+        let { length } = response.data;
+        nodeListLength = length;
+        console.log(`[Node at http://localhost:${MAP_PORT}] NodeList length: ${nodeListLength}`);
+    } catch (error) {
+        console.error(`[Node at http://localhost:${MAP_PORT}] Failed to get NodeList length:`, error.message);
+    }
+}
+
+setInterval(pollNodeListLength, 500000);
+
 
 // ✅ Read data
 app.get("/read", async (req, res) => {
   const key = req.query.key;
-  const value = await readData(key);
+  const value = await readData(key, nodeListLength);
   if (!value) return res.status(404).json({ error: "Key not found" });
   res.json({ success: true, message: "Data read successfully", key: key, data: value });
 });
@@ -51,7 +65,7 @@ app.post("/update", async (req, res) => {
 app.post("/delete", async (req, res) => {
     const { key } = req.body;
     console.log("cunt; ", key)
-    await deleteData(key);
+    await deleteData(key, nodeListLength);
     res.json({ success: true, message: "Data deleted successfully", key: key });
 });
 
@@ -63,22 +77,37 @@ app.get("/health", (req, res) => {
 const cache = new Database("./cache.sqlite");
 
 app.post("/addToCache", (req, res) => {
-    //check cache is not full, if so delete oldest entry
-    const cacheSize = cache.prepare("SELECT COUNT(*) FROM cache").get();
-    if(cacheSize >= CACHE_MAX_SIZE){
-        const oldestEntry = cache.prepare("SELECT key FROM cache ORDER BY updated_at ASC LIMIT 1").get();
-        cache.prepare("DELETE FROM cache WHERE key = ?").run(oldestEntry.key);
+    const { key, value } = req.body
+    //check if the key is in the cache first, if so update timestamp
+    const exists = cache.prepare("SELECT EXISTS (SELECT 1 FROM cache WHERE key = ?) AS key_exists").get(key);
+
+    if(exists.key_exists) {
+        console.log("Cache item exists, resetting updated at ", exists)
+        //then update the timestamp of the cache item
+        cache.prepare("UPDATE cache SET updated_at = ? WHERE key = ?").run(Math.floor(Date.now()/1000), key);
     }
-    
-    // Add to cache
-    console.log("adding to cache")
-    cache.prepare("INSERT INTO cache (key, value, updated_at) VALUES (?, ?, ?)").run(req.body.key, req.body.value, Date.now());
+    else {
+        console.log("Cache item being added")
+        //check cache is not full, if so delete oldest entry
+        const cacheSize = cache.prepare("SELECT COUNT(*) FROM cache").get();
+        if(cacheSize >= CACHE_MAX_SIZE){
+            const oldestEntry = cache.prepare("SELECT key FROM cache ORDER BY updated_at ASC LIMIT 1").get();
+            cache.prepare("DELETE FROM cache WHERE key = ?").run(oldestEntry.key);
+        }
+        
+        // Add to cache
+        console.log("adding to cache ", key, value)
+        cache.prepare("INSERT INTO cache (key, value, updated_at) VALUES (?, ?, ?)").run(key, JSON.stringify(value), Math.floor(Date.now()/1000));
+    }
+
     res.json({ success: true, message: "Data stored successfully" });
+
 })
 
 app.post("/removeFromCache", (req, res) => {
+    const { key } = req.body;
     // Remove from cache
-    cache.prepare("DELETE FROM cache WHERE key = ?").run(req.body.key);
+    cache.prepare("DELETE FROM cache WHERE key = ?").run(key);
 
     res.json({ success: true, message: "Data removed successfully" });
 })
@@ -95,4 +124,6 @@ process.on('SIGINT', async () => {
 app.listen(PORT, '0.0.0.0', async () => {
     console.log(`Server is running at http://0.0.0.0:${PORT}/`);
     await registerWithBroker();
+    setTimeout(() => 500);
+    await pollNodeListLength();
 });
