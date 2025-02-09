@@ -48,7 +48,7 @@ app.post("/validate-wallet", async (req, res) => {
 
 });
 
-// ✅ Generate Authentication Challenge
+// Generate Authentication Challenge
 app.post("/authenticate", async (req, res) => {
   const { walletAddress } = req.body;
   const challenge = `Sign this message to prove ownership: ${walletAddress}-${Date.now()}`;
@@ -65,24 +65,24 @@ app.post("/verify-signature", async (req, res) => {
   try {
       await cryptoWaitReady(); // Ensure crypto functions are initialized
 
-      // ✅ Convert Signature (Hex -> Uint8Array)
+      // Convert Signature (Hex -> Uint8Array)
       const signatureU8a = hexToU8a(signedMessage);
 
-      // ✅ Convert Challenge (String -> Uint8Array)
+      // Convert Challenge (String -> Uint8Array)
       const challengeU8a = stringToU8a(challenge);
 
-      // ✅ Initialize Keyring and Decode Wallet Address
+      // Initialize Keyring and Decode Wallet Address
       const keyring = new Keyring({ type: "sr25519" }); // Ensure using correct keyring type
       const publicKey = keyring.decodeAddress(walletAddress); // Convert wallet address to public key
 
-      // ✅ Verify Signature
+      // Verify Signature
       const { isValid } = signatureVerify(challengeU8a, signatureU8a, publicKey);
 
       if (!isValid) {
           return res.status(401).json({ error: "Signature verification failed!" });
       }
 
-      // ✅ Generate JWT for Authentication
+      // Generate JWT for Authentication
       const token = jwt.sign({ walletAddress }, SECRET_KEY, { expiresIn: "1h" });
       res.json({ success: true, token });
 
