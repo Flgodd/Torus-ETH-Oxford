@@ -93,7 +93,7 @@ async function createData(key, value) {
 }
 
 // ✅ Retrieve data from SQLite or OrbitDB
-async function readData(key, nodelistLength) {
+/* async function readData(key, nodelistLength) {
     const row = cache.prepare("SELECT value FROM cache WHERE key = ?").get(key);
     // update cache with current timestamp for this key
     cache.prepare("UPDATE cache SET updated_at = ? WHERE key = ?").run(Date.now(), key);
@@ -114,7 +114,20 @@ async function readData(key, nodelistLength) {
 
     // const value = await db.get({ _id: key });
     const value = await db.get(key);
-    const all = await db.all();
+
+    // const timestamp = Date.now();
+    // if (readData) cache.prepare("INSERT OR REPLACE INTO cache (key, value, updated_at) VALUES (?, ?, ?)").run(key, JSON.stringify(readData), timestamp);
+    return value;
+} */
+
+// ✅ Retrieve data from SQLite or OrbitDB
+async function readData(key) {
+    const row = cache.prepare("SELECT value FROM cache WHERE key = ?").get(key);
+    if (row) return row.value;
+    // If not in cache, fetch from OrbitDB
+
+    // const value = await db.get({ _id: key });
+    const value = await db.get(key);
 
     // const timestamp = Date.now();
     // if (readData) cache.prepare("INSERT OR REPLACE INTO cache (key, value, updated_at) VALUES (?, ?, ?)").run(key, JSON.stringify(readData), timestamp);

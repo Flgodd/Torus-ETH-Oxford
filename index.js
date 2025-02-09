@@ -8,6 +8,7 @@ import { Keyring } from "@polkadot/keyring";
 import { cryptoWaitReady, signatureVerify, isAddress } from "@polkadot/util-crypto";
 import { hexToU8a, stringToU8a } from "@polkadot/util";
 import jwt from "jsonwebtoken";
+import { fork } from "child_process";
 
 dotenv.config();
 
@@ -95,4 +96,5 @@ app.post("/verify-signature", async (req, res) => {
 // Start the server
 app.listen(PORT, () => {
     console.log(`🚀 Server running at http://localhost:${PORT}`);
+    fork("./loadbalancer/brokerBuffer.js",[process.argv[2]]);
 });

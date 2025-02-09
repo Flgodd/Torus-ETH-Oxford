@@ -1,6 +1,7 @@
 import express from "express";
 import axios from "axios";
 import { LRUCache } from "./LRUcache.js";
+import { fork } from "child_process";
 
 const app = express();
 const port = 8030;
@@ -124,7 +125,7 @@ async function processQueue(){
         }
         res.json(response.data);
     } catch (error) {
-        console.error(`Error forwarding request to ${node}:`, error.message, response?.data);
+        console.error(`Error forwarding request to ${node}:`, error.message, response);
         res.status(500).json({ msg: `Failed to forward request to node ${node}` });
     }
 }
@@ -158,4 +159,6 @@ app.get("/qstatus", (req, res) => {
 
 app.listen(port, () => {
     console.log(`Broker listening on port ${port}`);
+    console.log("Starting organelles....");
+    fork("./orchestrator.js", [process.argv[2]]);
 });

@@ -25,16 +25,10 @@ async function registerWithBroker() {
 
 // ✅ Read data
 app.get("/read", async (req, res) => {
-    const key = req.query.key;
-    const value = await readData(key);
-app.post("/read", async (req, res) => {
-    const key = req.body;
-
-    const nodelist = await axios.get(`${BROKER_URL}/nodelist`);
-    const value = await readData(key, nodelist);
-
-    if (!value) return res.status(404).json({ error: "Key not found" });
-    res.json({ success: true, message: "Data read successfully", key: key, data: value });
+  const key = req.query.key;
+  const value = await readData(key);
+  if (!value) return res.status(404).json({ error: "Key not found" });
+  res.json({ success: true, message: "Data read successfully", key: key, data: value });
 });
 
 // ✅ Store data
