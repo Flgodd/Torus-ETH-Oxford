@@ -36,6 +36,7 @@ try {
 
 //initial db - no args
 const initChild = spawn('docker', [
+    '--debug',
     'run', '--rm',
     '-p', `${MAP_PORT}:${process.env.PORT}`,//map to port 3000 which we hardcode below as the port to listen on inside of the container
     '--network', NETWORK_NAME,
@@ -67,6 +68,7 @@ initChild.stdout.on('data', (data) => {
 
         children.push(
             spawn('docker', [
+                '--debug',
                 'run', '--rm',
                 '--network', NETWORK_NAME,
                 '-p', `${MAP_PORT+i}:${process.env.PORT}`,//map to port 3000 which we hardcode below

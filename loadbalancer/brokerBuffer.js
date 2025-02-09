@@ -3,7 +3,7 @@ import axios from "axios";
 import { LRUCache } from "./LRUcache.js";
 
 const app = express();
-const port = process.env.PORT || 8030;
+const port = 8030;
 
 app.use(express.json());
 
