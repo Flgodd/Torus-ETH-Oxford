@@ -17,8 +17,7 @@ COPY package.json package-lock.json ./
 RUN npm install
 
 # Copy the rest of the app
-COPY server.js .
-COPY config/ ./config/
+COPY . .
 
 # Expose the port
 EXPOSE 3000
@@ -26,4 +25,4 @@ EXPOSE 4001
 
 # Command to run the app (uses PORT from environment)
 # Set up with two replicas for now
-CMD ["node", "server.js"]
+CMD node server.js
