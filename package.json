@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@chainsafe/libp2p-gossipsub": "^14.1.0",
+    "@lancedb/lancedb": "^0.16.0",
     "@orbitdb/core": "^2.4.3",
     "@polkadot/keyring": "^13.3.1",
     "blockstore-level": "^2.0.1",
@@ -28,6 +29,8 @@
     "event-target-shim": "^6.0.2",
     "express": "^4.21.2",
     "helia": "^5.2.0",
-    "jsonwebtoken": "^9.0.2"
+    "jsonwebtoken": "^9.0.2",
+    "lancedb": "^0.0.1",
+    "openai": "^4.83.0"
   }
 }

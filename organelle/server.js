@@ -2,12 +2,22 @@ import axios from "axios";
 import express from 'express';
 import { createData, readData, updateData, deleteData, teardownDB } from "./database.js";
 import Database from "better-sqlite3";
+import * as lancedb from "@lancedb/lancedb";
+import { generateEmbedding } from "./embeddings.js";
+
 
 const app = express();
 const PORT = 3000;
 const MAP_PORT = process.env.MAP_PORT;
 const BROKER_URL = "http://host.docker.internal:8030"; // Change if broker is on another machine
 const CACHE_MAX_SIZE = 500;
+
+const db = await lancedb.connect('./data/lancedb');
+async function initializeVectorTable() {
+    return await db.openTable('vector_store_table');
+}
+const vectorTable = await initializeVectorTable();
+
 
 app.use(express.json());
 
@@ -59,6 +69,17 @@ app.post("/delete", async (req, res) => {
 app.get("/health", (req, res) => {
     res.sendStatus(200); // Responds with 200 OK if alive
 });
+
+// ✅ Create Embedding from Text
+app.post("/create_embedding", async (req, res) => {
+    const { key, value } = req.body;
+    if (!key || !value) return res.status(400).json({ error: "A key and a value are required" });
+    const vectorEmedding = await generateEmbedding(raw_text);
+    const inputArray = [{id:unique_id, vector: vectorEmedding, raw_text: raw_text}];
+    await vectorTable.add(inputArray)
+    res.json({ success: true, message: "Data created successfully", hash: hash, key: key, data: value });
+});
+
 
 const cache = new Database("./cache.sqlite");
 

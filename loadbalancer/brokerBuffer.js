@@ -120,6 +120,10 @@ async function processQueue(){
             cache.cache.delete(data.key);
             console.log(`Cache entry removed for key: ${data.key}`);
         }
+        else if (operation === "CREATE_EMBEDDING") {
+            console.log("Create Embedding broker buffer");
+            response = await axios.post(`http://${node}/create_embedding`, data);
+        }
         else {
             console.error(`Unrecognised operation:`, operation);
             response = 'ERROR'
