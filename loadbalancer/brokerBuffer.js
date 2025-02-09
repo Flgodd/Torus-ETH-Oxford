@@ -101,9 +101,9 @@ async function processQueue(){
             response = await axios.post(`http://${node}/create`, data.value);
         }
         else if (operation === "READ" && data.key) {
-            console.log('BROKER BUFFER');
             response = await axios.get(`http://${node}/read`, data.key);
-            // cache.set(data.key, response.data);
+            cache.set(data.key, response.data);
+            console.log(``);
         }
         else if (operation === "UPDATE" && data.key && data.value) {
             response = await axios.post(`http://${node}/update`, data);

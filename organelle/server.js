@@ -21,8 +21,9 @@ async function registerWithBroker() {
 }
 
 // ✅ Read data
-app.post("/read", async (req, res) => {
-    const key = req.body;
+app.get("/read", async (req, res) => {
+    const { key } = req.headers;
+    console.log(key);
     console.log('SERVER');
     const value = await readData(key);
     if (!value) return res.status(404).json({ error: "Key not found" });

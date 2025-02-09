@@ -36,7 +36,7 @@ async function setupDB() {
     ipfs = await createHelia({libp2p, blockstore})
     orbitdb = await createOrbitDB({ipfs, directory: `./dbdata/${randDir}/orbitdb`})
 
-    db = await orbitdb.open('my-db', {AccessController: IPFSAccessController({write: ['*']}), type: 'documents'})
+    db = await orbitdb.open('my-db', { AccessController: IPFSAccessController({write: ['*']}), type: 'documents' })
 
     console.log('Database ready at:', db.address, orbitdb.ipfs.libp2p.getMultiaddrs()[0].toString())
     db.events.on('update', async (entry) => console.log('update from root: ', entry.payload.value))
@@ -96,12 +96,12 @@ async function createData(data) {
 
 // ✅ Retrieve data from SQLite or OrbitDB
 async function readData(key) {
-    console.log('DATABASE');
     // const row = cache.prepare("SELECT value FROM cache WHERE key = ?").get(key);
     // if (row) return row.value;
     // If not in cache, fetch from OrbitDB
     // const timestamp = Date.now();
-    const value = await db.get({_id: key});
+    const value = await db.get(key);
+    console.log(value);
     // if (readData) cache.prepare("INSERT OR REPLACE INTO cache (key, value, updated_at) VALUES (?, ?, ?)").run(key, JSON.stringify(readData), timestamp);
     return value;
 }
