@@ -1,27 +1,13 @@
 import { createLibp2p } from 'libp2p'
 import { createHelia } from 'helia'
-import { createOrbitDB } from '@orbitdb/core'
+import { createOrbitDB, IPFSAccessController } from '@orbitdb/core'
 import { LevelBlockstore } from 'blockstore-level'
 import { Libp2pOptions } from './config/libp2p.js'
 import { randomUUID } from 'crypto'
 import { multiaddr } from '@multiformats/multiaddr'
-import { IPFSAccessController } from '@orbitdb/core'
 import Database from "better-sqlite3";
-
 import dotenv from 'dotenv';
 dotenv.config();
-
-//i dont know why we need this at all
-if (typeof globalThis.CustomEvent === "undefined") {
-    globalThis.CustomEvent = class CustomEvent extends Event {
-        constructor(event, params = {}) {
-            super(event, params);
-            this.detail = params.detail || null;
-        }
-    };
-  }
-
-global.CustomEvent = CustomEvent; // Make it available globally
 
 let ipfs;
 let orbitdb;
@@ -45,7 +31,7 @@ async function setupDB() {
   console.log("poo2")
   console.log('Database ready at:', db.address, orbitdb.ipfs.libp2p.getMultiaddrs()[0].toString())
   db.events.on('update', async (entry) => console.log('update from root: ', entry.payload.value))
-  await upsertData("FUCK YEAH ROOT")
+  await createData("FUCK YEAH ROOT")
   let multiaddress = orbitdb.ipfs.libp2p.getMultiaddrs()[0].toString();
   //DO NOT REMOVE - sends data back to parent for parsing for replica nodes
   console.log(`{"dbaddr": "${db.address}", "multiaddress": "${multiaddress}"}`)
@@ -59,10 +45,10 @@ async function setupReplica() {
   await orbitdb.ipfs.libp2p.dial(multiaddr(MULTIADDR))
   console.log('opening db with ', DBADDR, ' dialling ', MULTIADDR)
   db = await orbitdb.open(DBADDR)
-  await upsertData("FUCK YEAH REPLICA")
+  await createData("FUCK YEAH REPLICA")
 }
 
-if(REPLICA) {
+if (REPLICA) {
   console.log('setting up replica')
   setupReplica().catch(console.error)
 } else {
@@ -91,12 +77,13 @@ cache.exec(`
     CREATE TABLE IF NOT EXISTS cache (
         key TEXT PRIMARY KEY,
         value TEXT,
-        updated_at INTEGER DEFAULT (strftime('%s', 'now'))
+        updated_at INTEGER DEFAULT (strftime('%s', 'now') * 1000)
     );
 `);
 
 // ✅ Store data and broadcast updates
-async function upsertData(key = randomUUID(),data) {
+async function createData(data) {
+  const key = randomUUID();
   const timestamp = Date.now();
   await db.put({ _id: key, value: data, timestamp: timestamp })
   cache.prepare("INSERT OR REPLACE INTO cache (key, value, updated_at) VALUES (?, ?, ?)").run(key, data, timestamp);
@@ -114,11 +101,17 @@ async function readData(key) {
   return data;
 }
 
+// ✅ Store data and broadcast updates
+async function updateData(key, data) {
+  const timestamp = Date.now();
+  await db.put({ _id: key, value: data, timestamp: timestamp })
+  cache.prepare("INSERT OR REPLACE INTO cache (key, value, updated_at) VALUES (?, ?, ?)").run(key, data, timestamp);
+}
+
 async function deleteData(key) {
   await db.del({_id: key})
   cache.prepare("DELETE FROM cache WHERE key=?").run(key);
   return key
 }
 
-export { setupDB, teardownDB };
-export { readData, upsertData, deleteData };
+export { setupDB, teardownDB, createData, readData, updateData, deleteData };

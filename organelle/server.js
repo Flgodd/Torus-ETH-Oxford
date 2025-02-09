@@ -1,7 +1,6 @@
 import axios from "axios";
 import express from 'express';
-import { teardownDB } from "./database.js";
-import { upsertData, readData, deleteData } from "./database.js";
+import { createData, readData, updateData, deleteData, teardownDB } from "./database.js";
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -19,7 +18,7 @@ global.CustomEvent = CustomEvent; // Make it available globally
 const app = express();
 const PORT = process.env.PORT;
 const MAP_PORT = process.env.MAP_PORT;
-const BROKER_URL = `http://localhost:${BROKER_PORT}`; // Change if broker is on another machine
+const BROKER_URL = `http://localhost:${process.env.BROKER_PORT}`; // Change if broker is on another machine
 
 app.use(express.json());
 
@@ -43,9 +42,9 @@ app.get("/read", async (req, res) => {
 
 // ✅ Store data
 app.post("/create", async (req, res) => {
-    const { key, value } = req.body;
-    if (!key || !value) return res.status(400).json({ error: "Key and value required" });
-    await upsertData(key, value);
+    const { value } = req.body;
+    if (!value) return res.status(400).json({ error: "Value required" });
+    await createData(value);
     res.json({ success: true, message: "Data stored successfully" });
 });
 
