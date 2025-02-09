@@ -6,6 +6,10 @@ import { Libp2pOptions } from './config/libp2p.js'
 import { randomUUID } from 'crypto'
 import { multiaddr } from '@multiformats/multiaddr'
 import { IPFSAccessController } from '@orbitdb/core'
+import sqlite3 from 'sqlite3';
+
+import dotenv from 'dotenv';
+dotenv.config();
 
 //i dont know why we need this at all
 if (typeof globalThis.CustomEvent === "undefined") {
@@ -18,15 +22,6 @@ if (typeof globalThis.CustomEvent === "undefined") {
   }
   
 global.CustomEvent = CustomEvent; // Make it available globally
-
-import { sqlite3 } from "sqlite3";
-import { createLibp2p } from 'libp2p'
-import { createHelia } from 'helia'
-import { createOrbitDB, IPFSAccessController } from '@orbitdb/core'
-import { LevelBlockstore } from 'blockstore-level'
-import { Libp2pOptions } from './config/libp2p.js'
-import { randomUUID } from 'crypto'
-import { multiaddr } from '@multiformats/multiaddr'
 
 let ipfs;
 let orbitdb;

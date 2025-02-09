@@ -1,9 +1,11 @@
 // @ts-check
 import { spawn } from "child_process";
 import { execSync } from "child_process";
+import dotenv from 'dotenv';
+dotenv.config();
 
 let children = [];
-const PORT = 3001;
+const MAP_PORT = 3001;
 const NUM_REPLICAS = parseInt(process.argv[2]) || 1;;
 const STATIC_ROOT_IP = "192.168.1.100"
 const NETWORK_NAME = "orbitdb-net";
@@ -35,10 +37,11 @@ try {
 //initial db - no args
 const initChild = spawn('docker', [
     'run', '--rm',
-    '-p', `${PORT}:3000`,//map to port 3000 which we hardcode below as the port to listen on inside of the container
+    '-p', `${MAP_PORT}:${process.env.PORT}`,//map to port 3000 which we hardcode below as the port to listen on inside of the container
     '--network', NETWORK_NAME,
     '--ip', STATIC_ROOT_IP, // Set static IP
-    '-e', `PORT=3000`,
+    '-env-file', '.env',
+    '-e', `MAP_PORT=${MAP_PORT}`,
     '-e', `NUM_REPLICAS=${NUM_REPLICAS}`,
     '--name', 'dbservice', 'dbservice'
 ]
@@ -61,14 +64,15 @@ initChild.stdout.on('data', (data) => {
 
     let i;
     for(i = 1; i < NUM_REPLICAS + 1; i++){
-        console.log("spawning child on port: ", PORT+i, " access thru localhost\n")
+        console.log("spawning child on port: ", MAP_PORT+i, " access thru localhost\n")
 
         children.push(
             spawn('docker', [
                 'run', '--rm',
                 '--network', NETWORK_NAME,
-                '-p', `${PORT+i}:3000`,//map to port 3000 which we hardcode below
-                '-e', `PORT=3000`,
+                '-p', `${MAP_PORT+i}:${process.env.PORT}`,//map to port 3000 which we hardcode below
+                '-env-file', '.env',
+                '-e', `MAP_PORT=${MAP_PORT+i}`,
                 '-e', `REPLICA=yes`,
                 '-e', `DBADDR=${dbaddr}`,
                 '-e', `MULTIADDR=${multiaddress}`,
