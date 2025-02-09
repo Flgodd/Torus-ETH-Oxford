@@ -24,6 +24,9 @@ async function registerWithBroker() {
 
 
 // ✅ Read data
+app.get("/read", async (req, res) => {
+    const key = req.query.key;
+    const value = await readData(key);
 app.post("/read", async (req, res) => {
     const key = req.body;
 
@@ -36,10 +39,10 @@ app.post("/read", async (req, res) => {
 
 // ✅ Store data
 app.post("/create", async (req, res) => {
-    const value = req.body;
-    if (!value) return res.status(400).json({ error: "Value required" });
-    const key = await createData(value);
-    res.json({ success: true, message: "Data created successfully", key: key, data: value });
+    const { key, value } = req.body;
+    if (!key || !value) return res.status(400).json({ error: "A key and a value are required" });
+    const hash = await createData(key, value);
+    res.json({ success: true, message: "Data created successfully", hash: hash, key: key, data: value });
 });
 
 // ✅ Store data
