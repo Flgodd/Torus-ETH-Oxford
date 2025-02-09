@@ -3,11 +3,11 @@ import dotenv from "dotenv";
 import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
+import crypto from "crypto";
 import { Keyring } from "@polkadot/keyring";
 import { cryptoWaitReady, signatureVerify, isAddress } from "@polkadot/util-crypto";
 import { hexToU8a, stringToU8a } from "@polkadot/util";
 import jwt from "jsonwebtoken";
-
 
 dotenv.config();
 
@@ -17,7 +17,6 @@ const SECRET_KEY = process.env.JWT_SECRET
 
 app.use(express.json());
 app.use(cors());
-const keyring = new Keyring({ type: "sr25519" });
 
 // Get the directory path
 const __filename = fileURLToPath(import.meta.url);
@@ -28,7 +27,7 @@ app.use(express.static(path.join(__dirname)));
 // Serve the landing page
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "index.html"));
-});
+});3
 
 // Validate wallet adress
 app.post("/validate-wallet", async (req, res) => {
@@ -51,7 +50,8 @@ app.post("/validate-wallet", async (req, res) => {
 // Generate Authentication Challenge
 app.post("/authenticate", async (req, res) => {
   const { walletAddress } = req.body;
-  const challenge = `Sign this message to prove ownership: ${walletAddress}-${Date.now()}`;
+  const nonce = crypto.randomUUID();
+  const challenge = `Sign this message to prove ownership: ${walletAddress}-${nonce}`;
   res.json({ challenge });
 });
 
