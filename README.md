@@ -1,8 +1,8 @@
 <img src="static/output-2.jpg" alt="DMO Logo" width="70"/>
 
-# DeMemoir - A Decentralised Memory Organ (DMO)
+# Porous Torus - A Decentralised Memory Organ (DMO)
 
->DeMemoir™, a **Decentralised Memory Organ (DMO)**  is a robust, high-throughput, decentralized memory retrieval and storage system. A crucial part of the Torus Agent Swarm, DeMemoir serves as a **tamper-proof** data store **without a single point of failure**. DeMemoir's archietecture ensures that data is always accessible, even if some nodes are offline and is designed to concurrently handle a large number of concurrent read and write requests.
+>Porous Torus™, a **Decentralised Memory Organ (DMO)**  is a robust, high-throughput, decentralized memory retrieval and storage system. A crucial part of the Torus Agent Swarm, DeMemoir serves as a **tamper-proof** data store **without a single point of failure**. DeMemoir's archietecture ensures that data is always accessible, even if some nodes are offline and is designed to concurrently handle a large number of concurrent read and write requests.
 
 
 
