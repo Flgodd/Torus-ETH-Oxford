@@ -4,3 +4,4 @@ orbitdb/
 dbdata/
 .DS_Store
 .idea
+organelle/cache.sqlite
