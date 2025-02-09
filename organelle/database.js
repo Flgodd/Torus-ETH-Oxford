@@ -111,10 +111,10 @@ async function readData(key, nodelistLength) {
     if (row) return row.value;
 
     // If not in cache, fetch from OrbitDB
-    const timestamp = Date.now();
-    const readData = await db.get({_id: key});
-    if (readData) cache.prepare("INSERT OR REPLACE INTO cache (key, value, updated_at) VALUES (?, ?, ?)").run(key, JSON.stringify(readData), timestamp);
-    return readData;
+    // const timestamp = Date.now();
+    const value = await db.get({_id: key});
+    // if (readData) cache.prepare("INSERT OR REPLACE INTO cache (key, value, updated_at) VALUES (?, ?, ?)").run(key, JSON.stringify(readData), timestamp);
+    return value;
 }
 
 // ✅ Store data and broadcast updates
