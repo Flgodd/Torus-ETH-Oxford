@@ -31,7 +31,7 @@ async function setupDB() {
   console.log("poo2")
   console.log('Database ready at:', db.address, orbitdb.ipfs.libp2p.getMultiaddrs()[0].toString())
   db.events.on('update', async (entry) => console.log('update from root: ', entry.payload.value))
-  await upsertData("FUCK YEAH ROOT")
+  await createData("FUCK YEAH ROOT")
   let multiaddress = orbitdb.ipfs.libp2p.getMultiaddrs()[0].toString();
   //DO NOT REMOVE - sends data back to parent for parsing for replica nodes
   console.log(`{"dbaddr": "${db.address}", "multiaddress": "${multiaddress}"}`)
@@ -45,7 +45,7 @@ async function setupReplica() {
   await orbitdb.ipfs.libp2p.dial(multiaddr(MULTIADDR))
   console.log('opening db with ', DBADDR, ' dialling ', MULTIADDR)
   db = await orbitdb.open(DBADDR)
-  await upsertData("FUCK YEAH REPLICA")
+  await createData("FUCK YEAH REPLICA")
 }
 
 if (REPLICA) {
@@ -82,7 +82,8 @@ cache.exec(`
 `);
 
 // ✅ Store data and broadcast updates
-async function upsertData(key = randomUUID(), data) {
+async function createData(data) {
+  const key = randomUUID();
   const timestamp = Date.now();
   await db.put({ _id: key, value: data, timestamp: timestamp })
   cache.prepare("INSERT OR REPLACE INTO cache (key, value, updated_at) VALUES (?, ?, ?)").run(key, data, timestamp);
@@ -100,10 +101,17 @@ async function readData(key) {
   return data;
 }
 
+// ✅ Store data and broadcast updates
+async function updateData(key, data) {
+  const timestamp = Date.now();
+  await db.put({ _id: key, value: data, timestamp: timestamp })
+  cache.prepare("INSERT OR REPLACE INTO cache (key, value, updated_at) VALUES (?, ?, ?)").run(key, data, timestamp);
+}
+
 async function deleteData(key) {
   await db.del({_id: key})
   cache.prepare("DELETE FROM cache WHERE key=?").run(key);
   return key
 }
 
-export { setupDB, teardownDB, readData, upsertData, deleteData };
+export { setupDB, teardownDB, createData, readData, updateData, deleteData };

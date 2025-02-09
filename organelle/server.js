@@ -1,6 +1,6 @@
 import axios from "axios";
 import express from 'express';
-import { deleteData, readData, teardownDB, upsertData } from "./database.js";
+import { createData, readData, updateData, deleteData, teardownDB } from "./database.js";
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -44,7 +44,7 @@ app.get("/read", async (req, res) => {
 app.post("/create", async (req, res) => {
     const { value } = req.body;
     if (!value) return res.status(400).json({ error: "Value required" });
-    await upsertData(value);
+    await createData(value);
     res.json({ success: true, message: "Data stored successfully" });
 });
 
@@ -52,7 +52,7 @@ app.post("/create", async (req, res) => {
 app.post("/update", async (req, res) => {
     const { key, value } = req.body;
     if (!key || !value) return res.status(400).json({ error: "Key and value required" });
-    await upsertData(key, value);
+    await updateData(key, value);
     res.json({ success: true, message: "Data updated successfully" });
 });
 
