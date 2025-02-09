@@ -37,7 +37,7 @@ async function setupDB() {
   orbitdb = await createOrbitDB({ ipfs, directory: `./dbdata/${randDir}/orbitdb` })
   
   db = await orbitdb.open('my-db', { AccessController: IPFSAccessController({ write: ['*']}), type: 'documents' })
-  console.log("poo2")
+
   console.log('Database ready at:', db.address, orbitdb.ipfs.libp2p.getMultiaddrs()[0].toString())
   db.events.on('update', async (entry) => console.log('update from root: ', entry.payload.value))
   await createData("FUCK YEAH ROOT")
