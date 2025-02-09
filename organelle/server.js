@@ -43,15 +43,6 @@ app.post("/read", async (req, res) => {
     res.json({ success: true, message: "Data read successfully", key: key, data: value });
 });
 
-// PLEASE IGNORE WILL REMOVE SHORTLY
-// // ✅ Read data
-// app.get("/read", async (req, res) => {
-//     const key = req.query.key;
-//     const value = await readData(key);
-//     if (!value) return res.status(404).json({ error: "Key not found" });
-//     res.json({ success: true, message: "Data read successfully", key: key, data: value });
-// });
-
 // ✅ Store data
 app.post("/create", async (req, res) => {
     const { key, value } = req.body;
