@@ -115,7 +115,8 @@ async function processQueue(){
             console.log(`Cache updated for key: ${data.key}`);
         }
         else if (operation === "DELETE") {
-            response = await axios.post(`http://${node}/delete`, data.key);
+            console.log("cuntuntuntuntunttu: ", data.key)
+            response = await axios.post(`http://${node}/delete`, data);
             cache.cache.delete(data.key);
             console.log(`Cache entry removed for key: ${data.key}`);
         }

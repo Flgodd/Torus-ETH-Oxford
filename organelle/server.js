@@ -48,8 +48,9 @@ app.post("/update", async (req, res) => {
 });
 
 // ✅ Remove data
-app.delete("/delete", async (req, res) => {
-    const key = req.body;
+app.post("/delete", async (req, res) => {
+    const { key } = req.body;
+    console.log("cunt; ", key)
     await deleteData(key);
     res.json({ success: true, message: "Data deleted successfully", key: key });
 });

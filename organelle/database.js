@@ -136,13 +136,13 @@ async function readData(key) {
 
 // ✅ Store data and broadcast updates
 async function updateData(key, data) {
-    const timestamp = Date.now();
-    await db.put({_id: key, value: data, timestamp: timestamp})
+    await db.put(key, data)
     return data;
 }
 
 async function deleteData(key) {
-    await db.del({_id: key})
+    await db.del(key)
+    console.log("cuntcunt: ", key)
     cache.prepare("DELETE FROM cache WHERE key=?").run(key);
 
     // Broadcast delete to all replicas
