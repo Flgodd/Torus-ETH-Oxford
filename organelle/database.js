@@ -77,7 +77,7 @@ cache.exec(`
     CREATE TABLE IF NOT EXISTS cache (
         key TEXT PRIMARY KEY,
         value TEXT,
-        updated_at INTEGER DEFAULT (strftime('%s', 'now'))
+        updated_at INTEGER DEFAULT (strftime('%s', 'now') * 1000)
     );
 `);
 

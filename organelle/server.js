@@ -15,7 +15,6 @@ if (typeof globalThis.CustomEvent === "undefined") {
 
 global.CustomEvent = CustomEvent; // Make it available globally
 
-
 const app = express();
 const PORT = process.env.PORT;
 const MAP_PORT = process.env.MAP_PORT;
@@ -43,9 +42,9 @@ app.get("/read", async (req, res) => {
 
 // ✅ Store data
 app.post("/create", async (req, res) => {
-    const { key, value } = req.body;
-    if (!key || !value) return res.status(400).json({ error: "Key and value required" });
-    await upsertData(key, value);
+    const { value } = req.body;
+    if (!value) return res.status(400).json({ error: "Value required" });
+    await upsertData(value);
     res.json({ success: true, message: "Data stored successfully" });
 });
 
