@@ -1,53 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Memory Organ - Secure Authentication</title>
-    <link rel="stylesheet" href="./style.css">
+    <title>Memory Organ - Wallet Authentication</title>
+    
+    <script src="https://unpkg.com/@polkadot/extension-dapp@latest/dist/polkadot-extension-dapp.min.js"></script>
     <script defer src="app.js"></script>
+
+
 </head>
-
 <body>
-
     <h2>Memory Organ - Secure Authentication</h2>
 
-    <!-- ✅ Input box for private key -->
-    <input type="text" id="walletAddress" placeholder="Enter your private key">
-    <br>
+    <!-- ✅ Wallet Address Input -->
+    <label for="walletAddress">Enter Wallet Address:</label>
+    <input type="text" id="walletAddress" placeholder="0x..." />
+    <button onclick="validateAddress()">Check Address</button>
 
-    <!-- ✅ Add event listener in app.js -->
-    <button id="establishConnectionBtn" onclick="establishConnection">Establish Connection</button> 
+    <p id="statusMessage"></p>
 
-    <p class="status" id="statusMessage"></p>
+    <!-- ✅ Sign Button (Hidden until address is validated) -->
+    <button id="signButton" onclick="signMessage()" style="display: none;">Sign Message</button>
 
 </body>
-
-<script>
-    function establishConnection() {
-        const privateKey = document.getElementById("walletAddress").value.trim();
-        const statusMessage = document.getElementById("statusMessage");
-
-        // ✅ Check if the input is empty
-        if (!privateKey) {
-            statusMessage.textContent = "❌ Error: Private key cannot be empty.";
-            statusMessage.style.color = "red";
-            return;
-        }
-
-        // ✅ Validate private key format (Ethereum-style: 0x + 40 hex characters)
-        const privateKeyRegex = /^0x[a-fA-F0-9]{40}$/;
-        if (!privateKeyRegex.test(privateKey)) {
-            statusMessage.textContent = "❌ Error: Invalid private key format.";
-            statusMessage.style.color = "red";
-            return;
-        }
-
-        // ✅ If everything is valid, proceed with success message
-        statusMessage.textContent = "✅ Success!";
-        statusMessage.style.color = "green";
-    }
-</script>
-
 </html>
