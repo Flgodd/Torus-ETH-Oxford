@@ -35,12 +35,10 @@ app.post("/validate-wallet", async (req, res) => {
   const { walletAddress } = req.body;
 
   try {
-    isvalid = isAddress(walletAddress);
+    const isvalid = isAddress(walletAddress);
     if (!isvalid) {
       return res.json({ valid: false, message: "Invalid Polkadot address" });
     }
-  
- 
   res.json({ valid: true });
   }
   catch (error) {
