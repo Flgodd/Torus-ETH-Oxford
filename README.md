@@ -43,7 +43,7 @@ This system is designed to be:
 
 <p align="center">
 
-<img src="static/torusdememolight.svg" alt="DMO Logo" width="800"/>
+<img src="static/torusdememolight.svg" alt="DMO Logo" width="600"/>
 
 </p>
 
