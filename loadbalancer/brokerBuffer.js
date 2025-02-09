@@ -115,7 +115,6 @@ async function processQueue(){
             console.log(`Cache updated for key: ${data.key}`);
         }
         else if (operation === "DELETE") {
-            console.log("cuntuntuntuntunttu: ", data.key)
             response = await axios.post(`http://${node}/delete`, data.key);
             cache.cache.delete(data.key);
             console.log(`Cache entry removed for key: ${data.key}`);
@@ -159,7 +158,6 @@ app.get("/qstatus", (req, res) => {
 });
 
 app.listen(port, '0.0.0.0', () => {
-    console.log(`Broker listening on port ${port}`);
-    console.log("Starting organelles....");
+    console.log(`Broker listening on port ${port}. Starting Organelles.`);
     fork("./orchestrator.js", [process.argv[2]]);
 });

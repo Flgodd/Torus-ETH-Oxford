@@ -17,7 +17,7 @@ try {
     console.log("Network may already exist, continuing...");
 }
 
-console.log("stopping any existing containers");
+console.log("Stopping any existing containers");
 
 try {
     execSync('docker stop $(docker ps -q)');
