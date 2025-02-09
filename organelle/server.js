@@ -1,24 +1,11 @@
 import axios from "axios";
 import express from 'express';
 import { createData, readData, updateData, deleteData, teardownDB } from "./database.js";
-import dotenv from 'dotenv';
-dotenv.config();
-
-if (typeof globalThis.CustomEvent === "undefined") {
-  globalThis.CustomEvent = class CustomEvent extends Event {
-      constructor(event, params = {}) {
-          super(event, params);
-          this.detail = params.detail || null;
-      }
-  };
-}
-
-global.CustomEvent = CustomEvent; // Make it available globally
 
 const app = express();
-const PORT = process.env.PORT;
+const PORT = 3000;
 const MAP_PORT = process.env.MAP_PORT;
-const BROKER_URL = `http://localhost:${process.env.BROKER_PORT}`; // Change if broker is on another machine
+const BROKER_URL = `http://localhost:8030`; // Change if broker is on another machine
 
 app.use(express.json());
 
