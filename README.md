@@ -195,3 +195,49 @@ The system provides a REST API for agent interactions.
 Requests require:
 - **Authorization header** with a signed message.
 - Agents must sign a **nonce challenge** before each session.
+
+### API Schemas
+
+#### CREATE:
+```json
+{
+  "operation": "CREATE",
+  "data": {
+    "key": "<resource_key>",
+    "value": {
+      "<item_id>": { "<attribute>": "<value>", "<attribute>": "<value>" }
+    }
+  }
+}
+```
+
+#### READ:
+```json
+{
+  "operation": "READ",
+  "data": {
+    "key": "<resource_key>"
+  }
+}
+```
+
+#### UPDATE:
+```json
+{
+  "operation": "UPDATE",
+  "data": {
+    "key": "<resource_key>",
+    "value": "<new_value>"
+  }
+}
+```
+
+#### DELETE:
+```json
+{
+  "operation": "DELETE",
+  "data": {
+    "key": "<resource_key>"
+  }
+}
+```
