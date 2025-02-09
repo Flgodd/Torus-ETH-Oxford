@@ -27,7 +27,7 @@ app.use(express.static(path.join(__dirname)));
 // Serve the landing page
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "index.html"));
-});3
+});
 
 // Validate wallet adress
 app.post("/validate-wallet", async (req, res) => {
