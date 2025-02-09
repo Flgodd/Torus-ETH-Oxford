@@ -1,8 +1,6 @@
 import express from "express";
 import axios from "axios";
 import { LRUCache } from "./LRUcache.js";
-import dotenv from 'dotenv';
-dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 8030;
@@ -17,12 +15,11 @@ const nodeStore = {
     failures: {},
 };
 
-const broker = {
+const broker = { 
     store: [],
     QState: false,
 };
 
-// Request Queue
 const requestQueue = [];
 const MAX_QUEUE_SIZE = 500;  // Maximum queue size to avoid memory overload
 const PROCESSING_INTERVAL = 100; // Interval to process queued requests (ms)
@@ -90,14 +87,13 @@ async function processQueue(){
             response = await axios.post(`http://${node}/delete`, req.body)
             console.log(`Cache entry removed for key: ${data._id}`);
         }
-        else if ((operation === "CREATE" || operation === "UPDATE") && data._id) {
+        else if(operation === "CREATE"){
+            response = await axios.post(`http://${node}/create`, req.body)
+        }
+        else if (operation === "UPDATE" && data._id) {
             cache.set(data._id, data);
             console.log(`Cache updated for key: ${data._id}`);
-            if(operation == "CREATE"){
-                response = await axios.post(`http://${node}/create`, req.body)
-            }else if(operation == "UPDATE"){
-                response = await axios.post(`http://${node}/update`, req.body)
-            }
+            response = await axios.post(`http://${node}/update`, req.body)
         }
 
         res.json(response.data);
