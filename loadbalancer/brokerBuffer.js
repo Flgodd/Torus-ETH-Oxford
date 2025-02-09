@@ -80,7 +80,7 @@ async function processQueue(){
         console.log(`Forwarding request to node: ${node}`);
         if (operation === "READ" && data._id) {
             console.log('sexy body ben aam: ,', req.body)
-            response = await axios.post(`http://${node}/read`, req.body)
+            response = await axios.get(`http://${node}/read`, req.param)
             cache.set(data._id, response.data);
         }
         else if (operation === "DELETE" && data._id) {
