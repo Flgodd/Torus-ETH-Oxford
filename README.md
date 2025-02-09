@@ -107,6 +107,9 @@ DMO supports **structured data storage** beyond simple key-value pairs. The data
 1. Agent signs a challenge with their **wallet’s private key**.
 2. Signature is verified against the agent’s **public wallet address**.
 3. If authentication is successful, the agent receives a **session token** for future API interactions.
+```
+Bearer <token>
+```
 
 ### **4.2 CRUD Operations**
 | Operation     | Description |
