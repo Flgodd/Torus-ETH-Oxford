@@ -13,16 +13,33 @@
 
 ## Requirements
 
-- Docker
-- Node
+- [Docker](https://docs.docker.com/engine/install/) - Ensure Docker is installed and running 
+- [Node](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) - Node.js and npm
 
 ## Quick Start
 
 To run Decentralised Memory Organ
 ```
 npm install
-npm run start
+node index.js
 ```
+
+If docker is running, you should see the the following print outs of the health checks of the nodes. It may take some time to startup. 
+
+```
+Health check [PASSED] for localhost:3001
+Health check [PASSED] for localhost:3002
+...
+```
+
+###### Authorisation Token
+
+Connect your wallet via the *index.html* to get authorisation to make requests. 
+
+###### Running Locally
+
+Make requests to http://localhost:3000/ with your Authorization Header. 
+
 
 ---
 
