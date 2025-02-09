@@ -6,7 +6,7 @@ import { Libp2pOptions } from './config/libp2p.js'
 import { randomUUID } from 'crypto'
 import { multiaddr } from '@multiformats/multiaddr'
 import { IPFSAccessController } from '@orbitdb/core'
-import sqlite3 from 'sqlite3';
+import { sqlite3 } from 'sqlite3';
 
 import dotenv from 'dotenv';
 dotenv.config();
