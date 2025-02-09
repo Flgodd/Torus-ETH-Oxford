@@ -41,7 +41,7 @@ async function setupDB() {
 
     console.log('Database ready at:', db.address, orbitdb.ipfs.libp2p.getMultiaddrs()[0].toString())
     db.events.on('update', async (entry) => console.log('update from root: ', entry.payload.value))
-    await createData("LOG", "FUCK YEAH ROOT")
+    await createData("LOG", "ROOT CREATED")
     let multiaddress = orbitdb.ipfs.libp2p.getMultiaddrs()[0].toString();
     //DO NOT REMOVE - sends data back to parent for parsing for replica nodes
     console.log(`{"dbaddr": "${db.address}", "multiaddress": "${multiaddress}"}`)
@@ -55,7 +55,7 @@ async function setupReplica() {
     await orbitdb.ipfs.libp2p.dial(multiaddr(MULTIADDR))
     console.log('opening db with ', DBADDR, ' dialling ', MULTIADDR)
     db = await orbitdb.open(DBADDR)
-    await createData("LOG", "FUCK YEAH REPLICA")
+    await createData("LOG", "REPLICA CREATED")
 }
 
 if (REPLICA) {
