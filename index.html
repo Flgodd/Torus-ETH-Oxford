@@ -1,27 +1,28 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Memory Organ - Wallet Authentication</title>
-    
-    <script src="https://unpkg.com/@polkadot/extension-dapp@latest/dist/polkadot-extension-dapp.min.js"></script>
-    <script defer src="app.js"></script>
 
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Memory Organ - Wallet Authentication</title>
 
-</head>
-<body>
-    <h2>Memory Organ - Secure Authentication</h2>
+        <script src="https://unpkg.com/@polkadot/extension-dapp@latest/dist/polkadot-extension-dapp.min.js"></script>
+        <script defer src="app.js"></script>
+        <link rel="stylesheet" href="./style.css">
+    </head>
 
-    <!-- ✅ Wallet Address Input -->
-    <label for="walletAddress">Enter Wallet Address:</label>
-    <input type="text" id="walletAddress" placeholder="0x..." />
-    <button onclick="validateAddress()">Check Address</button>
+    <body>
+        <h2>Memory Organ - Secure Authentication</h2>
 
-    <p id="statusMessage"></p>
+        <!-- ✅ Wallet Address Input -->
+        <label for="walletAddress">Enter Wallet Address:</label>
+        <input type="text" id="walletAddress" placeholder="0x..." />
+        <button onclick="validateAddress()">Check Address</button>
 
-    <!-- ✅ Sign Button (Hidden until address is validated) -->
-    <button id="signButton" onclick="signMessage()" style="display: none;">Sign Message</button>
+        <p id="statusMessage"></p>
 
-</body>
+        <!-- ✅ Sign Button (Hidden until address is validated) -->
+        <button id="signButton" onclick="signMessage()" style="display: none;">Sign Message</button>
+    </body>
+
 </html>
