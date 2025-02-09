@@ -77,8 +77,9 @@ async function processQueue(){
 
     try{
         var response = null;
-        
+        console.log(`Forwarding request to node: ${node}`);
         if (operation === "READ" && data._id) {
+            console.log('sexy body ben aam: ,', req.body)
             response = await axios.post(`http://${node}/read`, req.body)
             cache.set(data._id, response.data);
         }
@@ -98,7 +99,7 @@ async function processQueue(){
 
         res.json(response.data);
     }catch(error){
-        console.error(`Error forwarding request to ${node}:`, error.message);
+        console.error(`Error forwarding request to ${node}:`, error.message, response.body.error);
         res.status(500).json({ msg: `Failed to forward request to node ${node}` });
     }
 }
