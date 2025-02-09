@@ -36,11 +36,11 @@ async function setupDB() {
     ipfs = await createHelia({libp2p, blockstore})
     orbitdb = await createOrbitDB({ipfs, directory: `./dbdata/${randDir}/orbitdb`})
 
-    db = await orbitdb.open('my-db', { AccessController: IPFSAccessController({write: ['*']}), type: 'documents' })
+    db = await orbitdb.open('my-db', { AccessController: IPFSAccessController({write: ['*']}), type: 'keyvalue' })
 
     console.log('Database ready at:', db.address, orbitdb.ipfs.libp2p.getMultiaddrs()[0].toString())
     db.events.on('update', async (entry) => console.log('update from root: ', entry.payload.value))
-    await createData("FUCK YEAH ROOT")
+    await createData("LOG", "FUCK YEAH ROOT")
     let multiaddress = orbitdb.ipfs.libp2p.getMultiaddrs()[0].toString();
     //DO NOT REMOVE - sends data back to parent for parsing for replica nodes
     console.log(`{"dbaddr": "${db.address}", "multiaddress": "${multiaddress}"}`)
@@ -54,7 +54,7 @@ async function setupReplica() {
     await orbitdb.ipfs.libp2p.dial(multiaddr(MULTIADDR))
     console.log('opening db with ', DBADDR, ' dialling ', MULTIADDR)
     db = await orbitdb.open(DBADDR)
-    await createData("FUCK YEAH REPLICA")
+    await createData("LOG", "FUCK YEAH REPLICA")
 }
 
 if (REPLICA) {
@@ -86,22 +86,24 @@ cache.exec(`
 `);
 
 // ✅ Store data and broadcast updates
-async function createData(data) {
-    const key = randomUUID();
+async function createData(key, value) {
+    const hash = await db.put(key, value);
     const timestamp = Date.now();
-    await db.put({_id: key, value: data, timestamp: timestamp});
-    cache.prepare("INSERT OR REPLACE INTO cache (key, value, updated_at) VALUES (?, ?, ?)").run(key, JSON.stringify(data), timestamp);
-    return key
+    cache.prepare("INSERT OR REPLACE INTO cache (key, value, updated_at) VALUES (?, ?, ?)").run(key, JSON.stringify(value), timestamp);
+    return hash
 }
 
 // ✅ Retrieve data from SQLite or OrbitDB
 async function readData(key) {
-    // const row = cache.prepare("SELECT value FROM cache WHERE key = ?").get(key);
-    // if (row) return row.value;
+    const row = cache.prepare("SELECT value FROM cache WHERE key = ?").get(key);
+    if (row) return row.value;
     // If not in cache, fetch from OrbitDB
-    // const timestamp = Date.now();
+
+    // const value = await db.get({ _id: key });
     const value = await db.get(key);
-    console.log(value);
+    const all = await db.all();
+
+    // const timestamp = Date.now();
     // if (readData) cache.prepare("INSERT OR REPLACE INTO cache (key, value, updated_at) VALUES (?, ?, ?)").run(key, JSON.stringify(readData), timestamp);
     return value;
 }

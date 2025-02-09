@@ -97,20 +97,19 @@ async function processQueue(){
     try{
         var response = null;
         console.log(`Forwarding request to node: ${node}`);
-        if (operation === "CREATE" && data.value){
-            response = await axios.post(`http://${node}/create`, data.value);
+        if (operation === "CREATE" && data.key && data.value){
+            response = await axios.post(`http://${node}/create`, data);
         }
-        else if (operation === "READ" && data.key) {
-            response = await axios.get(`http://${node}/read`, data.key);
+        else if (operation === "READ") {
+            response = await axios.get(`http://${node}/read`, { params: { key: data.key }});
             cache.set(data.key, response.data);
-            console.log(``);
         }
-        else if (operation === "UPDATE" && data.key && data.value) {
+        else if (operation === "UPDATE") {
             response = await axios.post(`http://${node}/update`, data);
             cache.set(data.key, data);
             console.log(`Cache updated for key: ${data.key}`);
         }
-        else if (operation === "DELETE" && data.key) {
+        else if (operation === "DELETE") {
             response = await axios.post(`http://${node}/delete`, data.key);
             cache.cache.delete(data.key);
             console.log(`Cache entry removed for key: ${data.key}`);
@@ -125,7 +124,6 @@ async function processQueue(){
         res.status(500).json({ msg: `Failed to forward request to node ${node}` });
     }
 }
-
 
 setInterval(processQueue, PROCESSING_INTERVAL);
 
