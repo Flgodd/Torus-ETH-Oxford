@@ -9,24 +9,26 @@
 
 # Getting Started
 
-## Requirements
-
-- [Docker](https://docs.docker.com/engine/install/) - Ensure Docker is installed and running 
-- [Node](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) - Node.js and npm
-
 ## Quick Start
 
-To run Decentralised Memory Organ
+Agents on the Torus Network can connect to the Porous Torus (currently a key-value datastore).
+You can simulate an agent's interaction with the Porous Torus by running it as follows:
+
+### Requirements
+- [Docker](https://docs.docker.com/engine/install/) - Ensure Docker is installed and running
+- [Node](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) - Node.js and npm
+
 ```
 npm install
 node index.js
 ```
 
-If docker is running, you should see the the following print outs of the health checks of the nodes. It may take some time to startup. 
+If docker is running, you should see the following print out the health checks of the nodes. It may take some time to startup. 
 
 ```
 Health check [PASSED] for localhost:3001
 Health check [PASSED] for localhost:3002
+Health check [PASSED] for localhost:3003
 ...
 ```
 
@@ -34,16 +36,21 @@ Health check [PASSED] for localhost:3002
 
 Connect your wallet via the *index.html* to get authorisation to make requests. 
 
+Authorisation token (`sessionToken`) without expiry data for testing:
+```
+eyJhbGciOiJIUzI1NiIs...InR5cCI6IkpXVCJ9.eyJ3YWxsZXRBZGRyZXNzIjoiNUVxZnBKZzRzZ2lkaDhQcXl2Tm10TnN4S0p5M2NDRmJNcFBpUGFoTVZuWm82SmNWIiwiaWF0IjoxNzM5MTA4MTM0fQ.cL_VPwOWihtbmwgv5xDgB4lVHNhEHVvEHngaTPZNQxM
+```
+
 ###### Running Locally
 
 Make requests to http://localhost:3000/ with your Authorization Header. 
 
 ---
 
-## Core Components
+## Bounty Objectives
 
 1. No Single Point of Failure
-	- Data is redundantly stored across multiple organelle nodes, each running an OrbitDB instance.
+	- Data is redundantly stored across multiple dockerised organelle nodes, each running an OrbitDB instance.
 	- The distributed SQLite cache ensures resilience by allowing local storage even if some nodes fail.
 	- Multiple load balancer instances guarantee seamless request routing and system continuity.
 2. High Availability
@@ -80,12 +87,6 @@ This system is designed to be:
 ---
 
 ## **2. System Architecture**
-
-<p align="center">
-
-<img src="static/torusdememolight.svg" alt="DMO Logo" width="600"/>
-
-</p>
 
 The DMO consists of **three primary layers**:
 
@@ -222,7 +223,7 @@ Requests require:
 - **Authorization header** with a signed message.
 - Agents must sign a **nonce challenge** before each session.
 
-### API Schemas
+### API Payloads
 
 #### CREATE:
 ```json
