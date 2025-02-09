@@ -41,7 +41,7 @@ This system is designed to be:
 
 ## **2. System Architecture**
 
-<img src="static/torusdememo.drawio.svg" alt="DMO Logo" width="500"/>
+<img src="static/torusdememolight.svg" alt="DMO Logo" width="500"/>
 
 The DMO consists of **three primary layers**:
 
