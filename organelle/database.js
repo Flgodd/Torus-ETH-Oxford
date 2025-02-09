@@ -1,4 +1,3 @@
-import { sqlite3 } from "sqlite3";
 import { createLibp2p } from 'libp2p'
 import { createHelia } from 'helia'
 import { createOrbitDB, IPFSAccessController } from '@orbitdb/core'
@@ -6,6 +5,7 @@ import { LevelBlockstore } from 'blockstore-level'
 import { Libp2pOptions } from './config/libp2p.js'
 import { randomUUID } from 'crypto'
 import { multiaddr } from '@multiformats/multiaddr'
+import Database from "better-sqlite3";
 
 let ipfs;
 let orbitdb;
@@ -28,7 +28,7 @@ async function setupDB() {
   console.log("poo2")
   console.log('Database ready at:', db.address, orbitdb.ipfs.libp2p.getMultiaddrs()[0].toString())
   db.events.on('update', async (entry) => console.log('update from root: ', entry.payload.value))
-  await upsert("FUCK YEAH ROOT")
+  await upsertData("FUCK YEAH ROOT")
   let multiaddress = orbitdb.ipfs.libp2p.getMultiaddrs()[0].toString();
   //DO NOT REMOVE - sends data back to parent for parsing for replica nodes
   console.log(`{"dbaddr": "${db.address}", "multiaddress": "${multiaddress}"}`)
@@ -44,7 +44,7 @@ async function setupReplica() {
   await orbitdb.ipfs.libp2p.dial(multiaddr(MULTIADDR))
   console.log('opening db with ', DBADDR, ' dialling ', MULTIADDR)
   db = await orbitdb.open(DBADDR)
-  await upsert("FUCK YEAH REPLICA")
+  await upsertData("FUCK YEAH REPLICA")
 }
 
 if(REPLICA) {
@@ -59,20 +59,7 @@ async function teardownDB() {
   await db.close()
   await orbitdb.stop()
   await ipfs.stop()
-}
-
-function createBaseDocument(key) {
-  // _id is a orbitdb specific thing so dont change this as the key
-  return {
-    _id: key,
-    timestamp: new Date().getTime()
-  }
-}
-
-// Update or Create if key isn't specified
-export const upsert = async (value, key = randomUUID()) => {
-  await db.put({ ...createBaseDocument(key), data: value })
-  return key
+  cache.close();
 }
 
 
@@ -81,51 +68,42 @@ export const upsert = async (value, key = randomUUID()) => {
 
 
 
+// ✅ Open database
+const cache = new Database("./cache.sqlite");
 
-
-
-// ✅ Open SQLite database (cache)
-const cache = await open({
-  filename: "./db/cache.sqlite",
-  driver: sqlite3.Database
-});
-
-// ✅ Create table if not exists
-await cache.exec(`
+// ✅ Create a table
+cache.exec(`
     CREATE TABLE IF NOT EXISTS cache (
         key TEXT PRIMARY KEY,
         value TEXT,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        updated_at INTEGER DEFAULT (strftime('%s', 'now'))
     );
 `);
 
 // ✅ Store data and broadcast updates
-async function createData(key, value) {
-  await db.put(key, value);  // Update OrbitDB
-  await cache.run("INSERT OR REPLACE INTO cache (key, value, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)", [key, value]);
+async function upsertData(key = randomUUID(),data) {
+  const timestamp = Date.now();
+  await db.put({ _id: key, value: data, timestamp: timestamp })
+  cache.prepare("INSERT OR REPLACE INTO cache (key, value, updated_at) VALUES (?, ?, ?)").run(key, data, timestamp);
 }
 
 // ✅ Retrieve data from SQLite or OrbitDB
 async function readData(key) {
-  const row = await cache.get("SELECT value FROM cache WHERE key = ?", [key]);
+  const row = cache.prepare("SELECT value FROM cache WHERE key = ?").get(key);
   if (row) return row.value;
 
   // If not in cache, fetch from OrbitDB
-  const value = await db.get(key);
-  if (value) await createData(key, value);
-  return value;
-}
-
-// ✅ Update data and broadcast updates
-async function updateData(key, value) {
-  await db.put(key, value);  // Update OrbitDB
-  await cache.run("INSERT OR REPLACE INTO cache (key, value, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)", [key, value]);
+  const timestamp = Date.now();
+  const data = await db.get({_id: key});
+  if (data) cache.prepare("INSERT OR REPLACE INTO cache (key, value, updated_at) VALUES (?, ?, ?)").run(key, data, timestamp);
+  return data;
 }
 
 async function deleteData(key) {
   await db.del({_id: key})
+  cache.prepare("DELETE FROM cache WHERE key=?").run(key);
   return key
 }
 
 export { setupDB, teardownDB };
-export { readData, createData, deleteData };
+export { readData, upsertData, deleteData };

@@ -1,6 +1,5 @@
-import express from "express";
 import axios from "axios";
-import os from "os";
+import express from "express";
 
 const app = express();
 const port = process.env.PORT || Math.floor(9000 + Math.random() * 1000);

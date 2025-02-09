@@ -1,6 +1,7 @@
-import { teardownDB } from "./database.js";
-import { createData, readData, deleteData } from "./database.js";
+import axios from "axios";
 import express from 'express';
+import { teardownDB } from "./database.js";
+import { upsertData, readData, deleteData } from "./database.js";
 
 if (typeof globalThis.CustomEvent === "undefined") {
   globalThis.CustomEvent = class CustomEvent extends Event {
@@ -19,23 +20,18 @@ const BROKER_URL = '';
 
 app.use(express.json());
 
-// Dockers bridge network - accept requests from external connections
-app.listen(PORT, '0.0.0.0', async () => {
-    console.log(`Server is running at http://0.0.0.0:${PORT}/`);
-    await registerWithBroker();
-});
+// Function to register with the broker
+async function registerWithBroker() {
+    try {
+        const serverAddress = `localhost:${port}`; // Use localhost for easier testing
+        await axios.post(`${BROKER_URL}/subscribe`, { serverAddress });
+        console.log(`[Node ${port}] Successfully registered with broker`);
+    } catch (error) {
+        console.error(`[Node ${port}] Failed to register with broker:`, error.message);
+    }
+}
 
-// ✅ Root endpoint
-app.get('/', (req, res) => {
-    res.send(`Hello! Organelle running on port ${PORT}`);
-});
-
-// ✅ Check organelle health
-app.get("/health", (req, res) => {
-    res.sendStatus(200); // Responds with 200 OK if alive
-});
-
-// ✅ Retrieve data
+// ✅ Read data
 app.get("/read", async (req, res) => {
     const {key} = req.params;
     const value = await readData(key);
@@ -46,7 +42,7 @@ app.get("/read", async (req, res) => {
 app.post("/create", async (req, res) => {
     const { key, value } = req.body;
     if (!key || !value) return res.status(400).json({ error: "Key and value required" });
-    await createData(key, value);
+    await upsertData(key, value);
     res.json({ success: true, message: "Data stored successfully" });
 });
 
@@ -65,16 +61,10 @@ app.delete("/delete", async (req, res) => {
     res.json({ success: true, message: "Data stored successfully" });
 });
 
-// Function to register with the broker
-async function registerWithBroker() {
-    try {
-        const serverAddress = `localhost:${port}`; // Use localhost for easier testing
-        await axios.post(`${BROKER_URL}/subscribe`, { serverAddress });
-        console.log(`[Node ${port}] Successfully registered with broker`);
-    } catch (error) {
-        console.error(`[Node ${port}] Failed to register with broker:`, error.message);
-    }
-}
+// ✅ Check organelle health
+app.get("/health", (req, res) => {
+    res.sendStatus(200); // Responds with 200 OK if alive
+});
 
 // Clean up when stopping this app using ctrl+c
 process.on('SIGINT', async () => {
@@ -83,3 +73,9 @@ process.on('SIGINT', async () => {
     await teardownDB();
     process.exit(0)
 })
+
+// Dockers bridge network - accept requests from external connections
+app.listen(PORT, '0.0.0.0', async () => {
+    console.log(`Server is running at http://0.0.0.0:${PORT}/`);
+    await registerWithBroker();
+});
