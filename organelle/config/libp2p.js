@@ -10,7 +10,8 @@ export const Libp2pOptions = {
     mdns()
   ],
   addresses: {
-    listen: ['/ip4/0.0.0.0/tcp/0']
+    listen: ['/ip4/0.0.0.0/tcp/4001'],
+    announce: [`/ip4/192.168.1.100/tcp/4001`] // Manually announce the correct IP
   },
   transports: [
     tcp()
