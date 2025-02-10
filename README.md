@@ -2,11 +2,6 @@
 
 # Porous Torus - A Decentralised Memory Organ (DMO)
 
->Porous Torus™, a **Decentralised Memory Organ (DMO)**  is a robust, high-throughput, decentralized memory retrieval and storage system. A crucial part of the Torus Agent Swarm, DeMemoir serves as a **tamper-proof** data store **without a single point of failure**. DeMemoir's archietecture ensures that data is always accessible, even if some nodes are offline and is designed to concurrently handle a large number of concurrent read and write requests.
-
-
----
-
 # Getting Started
 
 ## Quick Start
@@ -213,10 +208,7 @@ The system provides a REST API for agent interactions.
 ### **8.1 Endpoints**
 | Method | Endpoint | Description |
 |--------|---------|-------------|
-| `POST` | `/store` | Stores a new memory entry. |
-| `GET`  | `/retrieve/:key` | Retrieves an entry from cache or OrbitDB. |
-| `DELETE` | `/delete/:key` | Marks an entry as deleted (soft delete). |
-| `GET` | `/health` | Checks system status. |
+| `POST` | `/query` | This endpoint services all operations |
 
 ### **8.2 API Authentication**
 Requests require:
